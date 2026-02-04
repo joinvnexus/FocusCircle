@@ -4,7 +4,7 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "jest --watchAll=false"
   },
   "keywords": [],
   "author": "",
@@ -19,6 +19,8 @@
     "mongoose": "^9.1.5"
   },
   "devDependencies": {
-    "mongodb-memory-server": "^11.0.1"
+    "jest": "^30.2.0",
+    "mongodb-memory-server": "^11.0.1",
+    "supertest": "^7.2.2"
   }
 }

@@ -7,6 +7,7 @@ import Register from './pages/Register';
 import Dashboard from './pages/Dashboard';
 import Communities from './pages/Communities';
 import CommunityDetail from './pages/CommunityDetail';
+import Profile from './pages/Profile';
 
 function App() {
   return (
@@ -36,6 +37,14 @@ function App() {
             element={
               <ProtectedRoute>
                 <CommunityDetail />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/profile"
+            element={
+              <ProtectedRoute>
+                <Profile />
               </ProtectedRoute>
             }
           />

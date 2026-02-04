@@ -7,6 +7,8 @@ const Dashboard = () => {
   const [tasks, setTasks] = useState([]);
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
+  const [priority, setPriority] = useState('medium');
+  const [dueDate, setDueDate] = useState('');
 
   const fetchTasks = async () => {
     try {
@@ -24,9 +26,11 @@ const Dashboard = () => {
   const handleAddTask = async (e) => {
     e.preventDefault();
     try {
-      await api.post('/tasks', { title, description });
+      await api.post('/tasks', { title, description, priority, dueDate });
       setTitle('');
       setDescription('');
+      setPriority('medium');
+      setDueDate('');
       fetchTasks();
     } catch (error) {
       console.error('Error adding task', error);
@@ -77,6 +81,31 @@ const Dashboard = () => {
               onChange={(e) => setDescription(e.target.value)}
             />
           </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+            <div>
+              <label htmlFor="priority" className="block text-sm text-gray-700 mb-1">Priority</label>
+              <select
+                id="priority"
+                className="w-full p-2 border rounded"
+                value={priority}
+                onChange={(e) => setPriority(e.target.value)}
+              >
+                <option value="low">Low</option>
+                <option value="medium">Medium</option>
+                <option value="high">High</option>
+              </select>
+            </div>
+            <div>
+              <label htmlFor="dueDate" className="block text-sm text-gray-700 mb-1">Due Date</label>
+              <input
+                id="dueDate"
+                type="date"
+                className="w-full p-2 border rounded"
+                value={dueDate}
+                onChange={(e) => setDueDate(e.target.value)}
+              />
+            </div>
+          </div>
           <button type="submit" className="flex items-center bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700">
             <Plus className="h-5 w-5 mr-2" /> Add Task
           </button>
@@ -95,6 +124,20 @@ const Dashboard = () => {
                     {task.title}
                   </h3>
                   <p className="text-sm text-gray-500">{task.description}</p>
+                  <div className="flex space-x-2 mt-1">
+                    <span className={`text-xs px-2 py-0.5 rounded-full font-bold uppercase ${
+                      task.priority === 'high' ? 'bg-red-100 text-red-700' :
+                      task.priority === 'medium' ? 'bg-yellow-100 text-yellow-700' :
+                      'bg-green-100 text-green-700'
+                    }`}>
+                      {task.priority}
+                    </span>
+                    {task.dueDate && (
+                      <span className="text-xs text-gray-400">
+                        Due: {new Date(task.dueDate).toLocaleDateString()}
+                      </span>
+                    )}
+                  </div>
                 </div>
               </div>
               <button onClick={() => deleteTask(task._id)} className="text-red-500 hover:text-red-700">

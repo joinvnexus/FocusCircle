@@ -13,6 +13,7 @@ const CommunityDetail = () => {
   const [tasks, setTasks] = useState([]);
   const [newTaskTitle, setNewTaskTitle] = useState('');
   const [isMember, setIsMember] = useState(false);
+  const [newPriority, setNewPriority] = useState('medium');
   const [expandedTask, setExpandedTask] = useState(null);
 
   const fetchCommunity = async () => {
@@ -51,8 +52,13 @@ const CommunityDetail = () => {
   const handleAddTask = async (e) => {
     e.preventDefault();
     try {
-      await api.post('/tasks', { title: newTaskTitle, community: id });
+      await api.post('/tasks', {
+        title: newTaskTitle,
+        community: id,
+        priority: newPriority
+      });
       setNewTaskTitle('');
+      setNewPriority('medium');
       fetchTasks();
     } catch (error) {
       console.error('Error adding community task', error);
@@ -89,18 +95,29 @@ const CommunityDetail = () => {
           <div className="lg:col-span-2">
             <h2 className="text-2xl font-bold mb-4">Shared Tasks</h2>
             {isMember && (
-              <form onSubmit={handleAddTask} className="flex mb-6">
-                <input
-                  type="text"
-                  placeholder="Share a new task..."
-                  className="flex-grow p-2 border rounded-l"
-                  value={newTaskTitle}
-                  onChange={(e) => setNewTaskTitle(e.target.value)}
-                  required
-                />
-                <button type="submit" className="bg-blue-600 text-white px-4 py-2 rounded-r hover:bg-blue-700">
-                  <Plus className="h-5 w-5" />
-                </button>
+              <form onSubmit={handleAddTask} className="bg-white p-4 rounded-lg shadow-sm border mb-6">
+                <div className="flex">
+                  <input
+                    type="text"
+                    placeholder="Share a new task..."
+                    className="flex-grow p-2 border rounded-l focus:outline-none focus:ring-1 focus:ring-blue-500"
+                    value={newTaskTitle}
+                    onChange={(e) => setNewTaskTitle(e.target.value)}
+                    required
+                  />
+                  <select
+                    className="p-2 border-t border-b border-r focus:outline-none"
+                    value={newPriority}
+                    onChange={(e) => setNewPriority(e.target.value)}
+                  >
+                    <option value="low">Low</option>
+                    <option value="medium">Medium</option>
+                    <option value="high">High</option>
+                  </select>
+                  <button type="submit" className="bg-blue-600 text-white px-4 py-2 rounded-r hover:bg-blue-700">
+                    <Plus className="h-5 w-5" />
+                  </button>
+                </div>
               </form>
             )}
 
@@ -111,7 +128,16 @@ const CommunityDetail = () => {
                   <div className="flex justify-between items-center">
                     <div>
                       <h3 className="text-lg font-medium text-gray-900">{task.title}</h3>
-                      <p className="text-sm text-gray-500">Posted by {task.user.name}</p>
+                      <div className="flex items-center space-x-2">
+                        <p className="text-sm text-gray-500">Posted by {task.user.name}</p>
+                        <span className={`text-[10px] px-1.5 py-0.5 rounded-full font-bold uppercase ${
+                          task.priority === 'high' ? 'bg-red-100 text-red-700' :
+                          task.priority === 'medium' ? 'bg-yellow-100 text-yellow-700' :
+                          'bg-green-100 text-green-700'
+                        }`}>
+                          {task.priority}
+                        </span>
+                      </div>
                     </div>
                     <button
                       onClick={() => setExpandedTask(expandedTask === task._id ? null : task._id)}
