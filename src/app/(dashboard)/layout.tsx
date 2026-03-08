@@ -6,18 +6,20 @@ import Link from 'next/link'
 import { useAuth } from '@/contexts/AuthContext'
 import { cn, getInitials } from '@/lib/utils'
 import {
-  LayoutDashboard,
-  CheckSquare,
-  Users,
-  Target,
+  Activity,
   Bell,
-  Settings,
+  CheckSquare,
+  LayoutDashboard,
   LogOut,
   Menu,
+  Settings,
+  Target,
+  Users,
   X,
 } from 'lucide-react'
-import { Button } from '@/components/ui/button'
 import { Avatar, AvatarFallback } from '@/components/ui/avatar'
+import { Button } from '@/components/ui/button'
+import { ThemeToggle } from '@/components/shared/theme-toggle'
 
 export const dynamic = 'force-dynamic'
 
@@ -26,6 +28,7 @@ const navigation = [
   { name: 'My Tasks', href: '/tasks', icon: CheckSquare },
   { name: 'Circles', href: '/circles', icon: Users },
   { name: 'Goals', href: '/goals', icon: Target },
+  { name: 'Activity', href: '/activity', icon: Activity },
   { name: 'Notifications', href: '/notifications', icon: Bell },
 ]
 
@@ -73,17 +76,20 @@ export default function DashboardLayout({
 
       <aside
         className={cn(
-          'fixed inset-y-0 left-0 z-50 w-64 bg-card border-r transform transition-transform duration-200 lg:translate-x-0',
+          'fixed inset-y-0 left-0 z-50 w-72 bg-card border-r transform transition-transform duration-200 lg:translate-x-0',
           sidebarOpen ? 'translate-x-0' : '-translate-x-full'
         )}
       >
-        <div className="flex flex-col h-full">
-          <div className="flex items-center justify-between p-4 border-b">
+        <div className="flex h-full flex-col">
+          <div className="flex items-center justify-between border-b p-4">
             <Link href="/dashboard" className="flex items-center space-x-2">
-              <div className="w-8 h-8 bg-primary rounded-lg flex items-center justify-center">
+              <div className="w-9 h-9 bg-primary rounded-2xl flex items-center justify-center">
                 <span className="text-white font-bold">FC</span>
               </div>
-              <span className="font-bold">FocusCircle</span>
+              <div>
+                <div className="font-bold">FocusCircle</div>
+                <div className="text-xs text-muted-foreground">Productivity workspace</div>
+              </div>
             </Link>
             <Button
               variant="ghost"
@@ -105,7 +111,7 @@ export default function DashboardLayout({
                   key={item.name}
                   href={item.href}
                   className={cn(
-                    'flex items-center space-x-3 px-3 py-2 rounded-lg text-sm font-medium transition-colors',
+                    'flex items-center space-x-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-colors',
                     isActive
                       ? 'bg-primary text-primary-foreground'
                       : 'text-muted-foreground hover:bg-accent hover:text-accent-foreground'
@@ -119,8 +125,8 @@ export default function DashboardLayout({
             })}
           </nav>
 
-          <div className="p-4 border-t space-y-1">
-            <div className="flex items-center space-x-3 mb-3">
+          <div className="border-t p-4 space-y-3">
+            <div className="flex items-center space-x-3">
               <Avatar>
                 <AvatarFallback>
                   {getInitials(appUser?.full_name || user.email || 'U')}
@@ -134,11 +140,12 @@ export default function DashboardLayout({
                   {user.email}
                 </p>
               </div>
+              <ThemeToggle />
             </div>
 
             <Link
               href="/profile"
-              className="flex items-center space-x-3 px-3 py-2 rounded-lg text-sm font-medium text-muted-foreground hover:bg-accent hover:text-accent-foreground transition-colors w-full"
+              className="flex items-center space-x-3 px-3 py-2 rounded-xl text-sm font-medium text-muted-foreground hover:bg-accent hover:text-accent-foreground transition-colors w-full"
               onClick={() => setSidebarOpen(false)}
             >
               <Settings className="h-5 w-5" />
@@ -148,7 +155,7 @@ export default function DashboardLayout({
             <button
               type="button"
               onClick={handleSignOut}
-              className="flex items-center space-x-3 px-3 py-2 rounded-lg text-sm font-medium text-muted-foreground hover:bg-accent hover:text-accent-foreground transition-colors w-full"
+              className="flex items-center space-x-3 px-3 py-2 rounded-xl text-sm font-medium text-muted-foreground hover:bg-accent hover:text-accent-foreground transition-colors w-full"
             >
               <LogOut className="h-5 w-5" />
               <span>Sign Out</span>
@@ -157,8 +164,8 @@ export default function DashboardLayout({
         </div>
       </aside>
 
-      <div className="lg:pl-64">
-        <header className="sticky top-0 z-30 bg-background border-b">
+      <div className="lg:pl-72">
+        <header className="sticky top-0 z-30 bg-background/95 backdrop-blur border-b">
           <div className="flex items-center justify-between px-4 py-3">
             <Button
               variant="ghost"
@@ -168,7 +175,9 @@ export default function DashboardLayout({
             >
               <Menu className="h-5 w-5" />
             </Button>
-            <div className="flex-1" />
+            <div className="hidden text-sm text-muted-foreground md:block">
+              Focus on your next best task and keep the circle aligned.
+            </div>
             <div className="flex items-center space-x-2">
               <Link href="/notifications">
                 <Button variant="ghost" size="icon">

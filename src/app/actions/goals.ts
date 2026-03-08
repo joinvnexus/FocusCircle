@@ -17,19 +17,32 @@ export async function createGoalAction(payload: unknown) {
 
   if (!user) return { error: "Unauthorized" };
 
-  const { error } = await supabase.from("goals").insert({
-    circle_id: parsed.data.circleId,
-    title: parsed.data.title,
-    description: parsed.data.description ?? null,
-    deadline: parsed.data.deadline ?? null,
-    progress: parsed.data.progress,
-    completion_status: parsed.data.completionStatus,
-    created_by: user.id,
-  });
+  const { data: goal, error } = await supabase
+    .from("goals")
+    .insert({
+      circle_id: parsed.data.circleId,
+      title: parsed.data.title,
+      description: parsed.data.description ?? null,
+      deadline: parsed.data.deadline ?? null,
+      progress: parsed.data.progress,
+      completion_status: parsed.data.completionStatus,
+      created_by: user.id,
+    })
+    .select("id, title")
+    .single();
 
-  if (error) {
+  if (error || !goal) {
     return { error: error.message };
   }
+
+  await supabase.from("activity_logs").insert({
+    circle_id: parsed.data.circleId,
+    actor_id: user.id,
+    action_type: "goal_created",
+    entity_type: "goal",
+    entity_id: goal.id,
+    metadata: { title: goal.title },
+  });
 
   revalidatePath("/goals");
   revalidatePath("/circles");

@@ -20,7 +20,7 @@ export default function LoginPage() {
     setLoading(true)
 
     const { error } = await signIn(email, password)
-    
+
     if (error) {
       toast.error(error.message)
       setLoading(false)
@@ -60,7 +60,7 @@ export default function LoginPage() {
               <Input
                 id="password"
                 type="password"
-                placeholder="••••••••"
+                placeholder="********"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 required
@@ -71,6 +71,11 @@ export default function LoginPage() {
               {loading ? 'Signing in...' : 'Sign In'}
             </Button>
           </form>
+          <div className="mt-4 text-center text-sm">
+            <Link href="/reset-password" className="text-primary hover:underline">
+              Forgot your password?
+            </Link>
+          </div>
           <div className="mt-4 text-center text-sm">
             <span className="text-muted-foreground">Don&apos;t have an account? </span>
             <Link href="/signup" className="text-primary hover:underline">

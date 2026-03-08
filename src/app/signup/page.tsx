@@ -22,7 +22,7 @@ export default function SignupPage() {
     setLoading(true)
 
     const { error } = await signUpAction({ email, password, fullName })
-    
+
     if (error) {
       toast.error(error)
       setLoading(false)
@@ -73,7 +73,7 @@ export default function SignupPage() {
               <Input
                 id="password"
                 type="password"
-                placeholder="••••••••"
+                placeholder="********"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 required

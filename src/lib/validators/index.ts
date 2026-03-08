@@ -14,6 +14,11 @@ export const signInSchema = z.object({
 export const profileSchema = z.object({
   fullName: z.string().min(2),
   timezone: z.string().min(2),
+  email: z.email("Enter a valid email"),
+  emailNotifications: z.boolean().default(true),
+  deadlineAlerts: z.boolean().default(true),
+  weeklySummary: z.boolean().default(false),
+  password: z.string().min(8).optional().or(z.literal("")),
 });
 
 export const taskSchema = z.object({
@@ -46,4 +51,12 @@ export const commentSchema = z.object({
   targetId: z.string().uuid(),
   body: z.string().min(1).max(1000),
   parentId: z.string().uuid().optional(),
+});
+
+export const passwordResetRequestSchema = z.object({
+  email: z.email("Enter a valid email"),
+});
+
+export const passwordResetSchema = z.object({
+  password: z.string().min(8, "Password must be at least 8 characters"),
 });

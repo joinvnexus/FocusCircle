@@ -42,6 +42,15 @@ export async function createCircleAction(payload: unknown) {
     role: "owner",
   });
 
+  await supabase.from("activity_logs").insert({
+    circle_id: circle.id,
+    actor_id: user.id,
+    action_type: "circle_created",
+    entity_type: "circle",
+    entity_id: circle.id,
+    metadata: { name: parsed.data.name },
+  });
+
   revalidatePath("/circles");
   return { error: null };
 }
@@ -75,6 +84,27 @@ export async function joinCircleAction(inviteCode: string) {
     return { error: membershipError.message };
   }
 
+  await supabase.from("activity_logs").insert({
+    circle_id: circle.id,
+    actor_id: user.id,
+    action_type: "member_joined",
+    entity_type: "circle_member",
+    entity_id: circle.id,
+    metadata: { userId: user.id },
+  });
+
   revalidatePath("/circles");
+  return { error: null };
+}
+
+export async function updateCircleMemberRoleAction(circleId: string, userId: string, role: "owner" | "admin" | "member") {
+  const supabase = await createClient();
+  const { error } = await supabase.from("circle_members").update({ role }).eq("circle_id", circleId).eq("user_id", userId);
+
+  if (error) {
+    return { error: error.message };
+  }
+
+  revalidatePath(`/circles/${circleId}`);
   return { error: null };
 }

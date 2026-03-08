@@ -9,7 +9,11 @@ export interface AppUser {
   full_name: string;
   avatar_url: string | null;
   timezone: string;
-  streak_count: number;
+  notification_preferences: {
+    email_notifications: boolean;
+    deadline_alerts: boolean;
+    weekly_summary: boolean;
+  } | null;
   created_at: string;
   updated_at: string;
 }
@@ -68,6 +72,8 @@ export interface Comment {
   target_id: string;
   parent_id: string | null;
   user_id: string;
+  mentions: string[] | null;
+  reactions: Record<string, string[]> | null;
   created_at: string;
   updated_at: string;
 }
@@ -101,6 +107,15 @@ export interface DashboardSnapshot {
   circleActivity: ActivityLog[];
   weeklyCompleted: { day: string; completed: number }[];
   goalProgress: { name: string; progress: number }[];
+}
+
+export interface CircleWorkspaceSnapshot {
+  circle: Circle | null;
+  members: Array<CircleMember & { users: Pick<AppUser, "full_name" | "avatar_url" | "email"> | null }>;
+  tasks: Task[];
+  goals: Goal[];
+  activities: ActivityLog[];
+  comments: Array<Comment & { users: Pick<AppUser, "full_name" | "avatar_url" | "email"> | null }>;
 }
 
 export interface ApiResponse<T> {

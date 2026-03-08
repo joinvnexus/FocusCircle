@@ -61,3 +61,19 @@ export function getStatusColor(status: string): string {
       return "bg-muted text-muted-foreground hover:bg-muted";
   }
 }
+
+export function formatStatusLabel(status: string): string {
+  return status.replaceAll("_", " ").replace(/\b\w/g, (char) => char.toUpperCase());
+}
+
+export function extractMentions(body: string): string[] {
+  return Array.from(new Set(body.match(/@\w+/g)?.map((item) => item.slice(1).toLowerCase()) ?? []));
+}
+
+export function safePercentage(value: number, total: number): number {
+  if (!total) {
+    return 0;
+  }
+
+  return Math.max(0, Math.min(100, Math.round((value / total) * 100)));
+}

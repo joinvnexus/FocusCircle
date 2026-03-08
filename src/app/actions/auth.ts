@@ -3,7 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
-import { signInSchema, signUpSchema } from "@/lib/validators";
+import { passwordResetRequestSchema, passwordResetSchema, signInSchema, signUpSchema } from "@/lib/validators";
 
 export async function signInAction(payload: unknown) {
   const parsed = signInSchema.safeParse(payload);
@@ -61,4 +61,29 @@ export async function signOutAction() {
   const supabase = await createClient();
   await supabase.auth.signOut();
   redirect("/login");
+}
+
+export async function requestPasswordResetAction(payload: unknown) {
+  const parsed = passwordResetRequestSchema.safeParse(payload);
+  if (!parsed.success) {
+    return { error: parsed.error.issues[0]?.message ?? "Invalid email" };
+  }
+
+  const supabase = await createClient();
+  const { error } = await supabase.auth.resetPasswordForEmail(parsed.data.email, {
+    redirectTo: `${process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000"}/reset-password`,
+  });
+
+  return { error: error?.message ?? null };
+}
+
+export async function resetPasswordAction(payload: unknown) {
+  const parsed = passwordResetSchema.safeParse(payload);
+  if (!parsed.success) {
+    return { error: parsed.error.issues[0]?.message ?? "Invalid password" };
+  }
+
+  const supabase = await createClient();
+  const { error } = await supabase.auth.updateUser({ password: parsed.data.password });
+  return { error: error?.message ?? null };
 }

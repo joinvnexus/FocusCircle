@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { checkRateLimit } from "@/lib/rate-limit";
 import { createClient } from "@/lib/supabase/server";
 import { taskSchema } from "@/lib/validators";
 
@@ -26,6 +27,11 @@ export async function GET() {
 }
 
 export async function POST(request: Request) {
+  const limit = checkRateLimit(request.headers.get("x-forwarded-for") ?? "tasks:unknown");
+  if (!limit.allowed) {
+    return NextResponse.json({ error: "Too many requests" }, { status: 429 });
+  }
+
   const body = await request.json();
   const parsed = taskSchema.safeParse(body);
 

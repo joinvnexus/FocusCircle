@@ -1,0 +1,134 @@
+"use client";
+
+import { useMemo, useState, useTransition } from "react";
+import { DndContext, DragEndEvent, useDraggable, useDroppable } from "@dnd-kit/core";
+import { toast } from "sonner";
+import { Trash2 } from "lucide-react";
+import { deleteTaskAction, updateTaskStatusAction } from "@/app/actions/tasks";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { formatDate, formatStatusLabel, getPriorityColor } from "@/lib/utils";
+import type { Task, TaskStatus } from "@/types";
+
+const columns: TaskStatus[] = ["todo", "in_progress", "completed"];
+
+export function KanbanBoard({ initialTasks }: { initialTasks: Task[] }) {
+  const [tasks, setTasks] = useState(initialTasks);
+  const [isPending, startTransition] = useTransition();
+  const grouped = useMemo(
+    () => Object.fromEntries(columns.map((column) => [column, tasks.filter((task) => task.status === column)])),
+    [tasks],
+  ) as Record<TaskStatus, Task[]>;
+
+  function handleDragEnd(event: DragEndEvent) {
+    const taskId = String(event.active.id);
+    const nextStatus = event.over?.id as TaskStatus | undefined;
+    if (!nextStatus || !columns.includes(nextStatus)) {
+      return;
+    }
+
+    const current = tasks.find((task) => task.id === taskId);
+    if (!current || current.status === nextStatus) {
+      return;
+    }
+
+    const previous = tasks;
+    setTasks((prev) => prev.map((task) => (task.id === taskId ? { ...task, status: nextStatus } : task)));
+    startTransition(async () => {
+      const result = await updateTaskStatusAction(taskId, nextStatus);
+      if (result.error) {
+        toast.error(result.error);
+        setTasks(previous);
+      }
+    });
+  }
+
+  return (
+    <DndContext onDragEnd={handleDragEnd}>
+      <div className="grid gap-4 lg:grid-cols-3">
+        {columns.map((column) => (
+          <KanbanColumn
+            key={column}
+            id={column}
+            title={formatStatusLabel(column)}
+            tasks={grouped[column]}
+            onDelete={(taskId) => {
+              const previous = tasks;
+              setTasks((prev) => prev.filter((task) => task.id !== taskId));
+              startTransition(async () => {
+                const result = await deleteTaskAction(taskId);
+                if (result.error) {
+                  toast.error(result.error);
+                  setTasks(previous);
+                }
+              });
+            }}
+            isPending={isPending}
+          />
+        ))}
+      </div>
+    </DndContext>
+  );
+}
+
+function KanbanColumn({
+  id,
+  title,
+  tasks,
+  onDelete,
+  isPending,
+}: {
+  id: TaskStatus;
+  title: string;
+  tasks: Task[];
+  onDelete: (taskId: string) => void;
+  isPending: boolean;
+}) {
+  const { isOver, setNodeRef } = useDroppable({ id });
+
+  return (
+    <Card ref={setNodeRef} className={isOver ? "border-primary shadow-md shadow-primary/10" : undefined}>
+      <CardHeader className="flex flex-row items-center justify-between">
+        <CardTitle className="text-base">{title}</CardTitle>
+        <Badge variant="secondary">{tasks.length}</Badge>
+      </CardHeader>
+      <CardContent className="space-y-3">
+        {tasks.map((task) => (
+          <TaskCard key={task.id} task={task} onDelete={onDelete} disabled={isPending} />
+        ))}
+        {!tasks.length && <div className="rounded-xl border border-dashed p-6 text-center text-sm text-muted-foreground">Drop tasks here</div>}
+      </CardContent>
+    </Card>
+  );
+}
+
+function TaskCard({ task, onDelete, disabled }: { task: Task; onDelete: (taskId: string) => void; disabled: boolean }) {
+  const { attributes, listeners, setNodeRef, transform, isDragging } = useDraggable({ id: task.id });
+  const style = transform ? { transform: `translate3d(${transform.x}px, ${transform.y}px, 0)` } : undefined;
+
+  return (
+    <div
+      ref={setNodeRef}
+      style={style}
+      {...listeners}
+      {...attributes}
+      className={`rounded-2xl border bg-card p-4 shadow-sm transition ${isDragging ? "opacity-70 shadow-lg" : ""}`}
+    >
+      <div className="flex items-start justify-between gap-3">
+        <div className="space-y-2">
+          <div className="font-medium">{task.title}</div>
+          {task.description && <p className="text-sm text-muted-foreground">{task.description}</p>}
+        </div>
+        <Button type="button" variant="ghost" size="icon" disabled={disabled} onClick={() => onDelete(task.id)}>
+          <Trash2 className="h-4 w-4" />
+        </Button>
+      </div>
+      <div className="mt-3 flex flex-wrap items-center gap-2">
+        <Badge className={getPriorityColor(task.priority)}>{task.priority}</Badge>
+        {task.due_date && <Badge variant="outline">Due {formatDate(task.due_date)}</Badge>}
+        {task.circle_id && <Badge variant="secondary">Circle task</Badge>}
+      </div>
+    </div>
+  );
+}
