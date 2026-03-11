@@ -1,38 +1,79 @@
 # FocusCircle
 
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+FocusCircle is a productivity and collaboration SaaS for individuals and small groups (“Circles”) to manage tasks, share goals, track progress, and stay accountable together.
 
-## Getting Started
+## Features
+- Personal task management with priorities, due dates, and statuses
+- Circle workspaces with roles, members, and activity feeds
+- Kanban task board
+- Shared goals with progress tracking
+- Threaded comments with mentions and reactions
+- In-app notifications and email delivery
+- Productivity analytics dashboards
+- Supabase Auth, Realtime, and Storage integrations
 
-First, run the development server:
+## Tech Stack
+- Next.js App Router, React, TypeScript, Tailwind CSS, shadcn/ui
+- Supabase Postgres, Auth, Realtime, Storage
+- Recharts for analytics
+- Vitest + Testing Library for tests
 
+## Local Setup
+1. Install dependencies:
+```bash
+npm install
+```
+2. Configure environment variables in `.env`:
+- `NEXT_PUBLIC_SUPABASE_URL`
+- `NEXT_PUBLIC_SUPABASE_ANON_KEY`
+- `SUPABASE_SERVICE_ROLE_KEY`
+- `RESEND_API_KEY`
+- `RESEND_FROM_EMAIL`
+- `NEXT_PUBLIC_APP_URL`
+- `CRON_SECRET`
+3. Run the dev server:
 ```bash
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+## Database & Supabase
+- Apply the schema in `supabase/schema.sql`
+- Enable RLS policies in Supabase
+- Create a public Storage bucket named `avatars`
+- Configure Supabase Auth redirect URLs for:
+  - `/login`
+  - `/reset-password`
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Email Notifications
+- Email delivery uses Resend.
+- Users can toggle email preferences in Profile Settings.
+- Deadline reminders are sent by calling `/api/notifications/deadlines` with `Authorization: Bearer <CRON_SECRET>`.
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+## Scripts
+- `npm run dev` — local dev server
+- `npm run build` — production build
+- `npm run test` — test suite
+- `npm run typecheck` — TypeScript validation
 
-## Learn More
+## CI/CD
+- GitHub Actions CI is defined in `.github/workflows/ci.yml`.
+- CI runs install, typecheck, tests, and build.
 
-To learn more about Next.js, take a look at the following resources:
+## Vercel Deployment
+Build settings:
+- Install Command: `npm install`
+- Build Command: `npm run build`
+- Output Directory: `.next`
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+Set Production env vars in Vercel:
+- `NEXT_PUBLIC_SUPABASE_URL`
+- `NEXT_PUBLIC_SUPABASE_ANON_KEY`
+- `SUPABASE_SERVICE_ROLE_KEY`
+- `RESEND_API_KEY`
+- `RESEND_FROM_EMAIL`
+- `NEXT_PUBLIC_APP_URL`
+- `CRON_SECRET`
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+## Troubleshooting
+- Build fails with missing Supabase env: ensure `NEXT_PUBLIC_SUPABASE_URL` and `NEXT_PUBLIC_SUPABASE_ANON_KEY` are set in the build environment.
+- Middleware errors on Vercel: check edge logs and verify env values exist in Production.
