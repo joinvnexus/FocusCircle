@@ -1,10 +1,8 @@
--- FocusCircle Database Schema
--- Run this in your Supabase SQL Editor
+-- FocusCircle initial schema migration
+-- Generated from supabase/schema.sql for use with `supabase db push`
 
--- Enable UUID extension
 CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
 
--- Users table (extends Supabase auth.users)
 CREATE TABLE IF NOT EXISTS public.users (
   id UUID PRIMARY KEY REFERENCES auth.users(id) ON DELETE CASCADE,
   email TEXT UNIQUE NOT NULL,
@@ -16,7 +14,6 @@ CREATE TABLE IF NOT EXISTS public.users (
   updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
--- Circles table
 CREATE TABLE IF NOT EXISTS public.circles (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
   name TEXT NOT NULL,
@@ -28,7 +25,6 @@ CREATE TABLE IF NOT EXISTS public.circles (
   updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
--- Circle members table
 CREATE TABLE IF NOT EXISTS public.circle_members (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
   circle_id UUID NOT NULL REFERENCES public.circles(id) ON DELETE CASCADE,
@@ -38,7 +34,6 @@ CREATE TABLE IF NOT EXISTS public.circle_members (
   UNIQUE(circle_id, user_id)
 );
 
--- Goals table
 CREATE TABLE IF NOT EXISTS public.goals (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
   title TEXT NOT NULL,
@@ -52,7 +47,6 @@ CREATE TABLE IF NOT EXISTS public.goals (
   updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
--- Tasks table
 CREATE TABLE IF NOT EXISTS public.tasks (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
   title TEXT NOT NULL,
@@ -68,7 +62,6 @@ CREATE TABLE IF NOT EXISTS public.tasks (
   updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
--- Comments table
 CREATE TABLE IF NOT EXISTS public.comments (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
   body TEXT NOT NULL,
@@ -82,7 +75,6 @@ CREATE TABLE IF NOT EXISTS public.comments (
   updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
--- Notifications table
 CREATE TABLE IF NOT EXISTS public.notifications (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
   type TEXT NOT NULL CHECK (type IN ('task_assigned', 'circle_invite', 'comment', 'deadline', 'goal_update')),
@@ -94,7 +86,6 @@ CREATE TABLE IF NOT EXISTS public.notifications (
   data JSONB
 );
 
--- Activity logs table
 CREATE TABLE IF NOT EXISTS public.activity_logs (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
   action_type TEXT NOT NULL,
@@ -106,7 +97,6 @@ CREATE TABLE IF NOT EXISTS public.activity_logs (
   metadata JSONB
 );
 
--- Create indexes
 CREATE INDEX IF NOT EXISTS idx_tasks_created_by ON public.tasks(created_by);
 CREATE INDEX IF NOT EXISTS idx_tasks_circle_id ON public.tasks(circle_id);
 CREATE INDEX IF NOT EXISTS idx_tasks_goal_id ON public.tasks(goal_id);
@@ -119,7 +109,6 @@ CREATE INDEX IF NOT EXISTS idx_notifications_is_read ON public.notifications(is_
 CREATE INDEX IF NOT EXISTS idx_activity_logs_circle_id ON public.activity_logs(circle_id);
 CREATE INDEX IF NOT EXISTS idx_comments_target ON public.comments(target_type, target_id);
 
--- Enable Row Level Security (RLS)
 ALTER TABLE public.users ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.circles ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.circle_members ENABLE ROW LEVEL SECURITY;
@@ -129,7 +118,6 @@ ALTER TABLE public.comments ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.notifications ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.activity_logs ENABLE ROW LEVEL SECURITY;
 
--- RLS helper functions
 CREATE OR REPLACE FUNCTION public.is_circle_member(target_circle_id UUID)
 RETURNS BOOLEAN
 LANGUAGE sql
@@ -159,13 +147,10 @@ AS $$
   );
 $$;
 
--- RLS Policies
--- Users
 CREATE POLICY "Users can view own profile" ON public.users FOR SELECT USING (auth.uid() = id);
 CREATE POLICY "Users can update own profile" ON public.users FOR UPDATE USING (auth.uid() = id);
 CREATE POLICY "Users can insert own profile" ON public.users FOR INSERT WITH CHECK (auth.uid() = id);
 
--- Circles
 CREATE POLICY "Circle members can view circles" ON public.circles FOR SELECT USING (
   public.is_circle_member(id) OR owner_id = auth.uid()
 );
@@ -175,7 +160,6 @@ CREATE POLICY "Circle owners and admins can update" ON public.circles FOR UPDATE
 );
 CREATE POLICY "Circle owners can delete" ON public.circles FOR DELETE USING (auth.uid() = owner_id);
 
--- Circle Members
 CREATE POLICY "Members can view circle_members" ON public.circle_members FOR SELECT USING (
   user_id = auth.uid() OR public.is_circle_member(circle_id)
 );
@@ -186,9 +170,8 @@ CREATE POLICY "Owners and admins can update circle_members" ON public.circle_mem
   public.is_circle_admin(circle_id)
 );
 
--- Tasks
 CREATE POLICY "Users can view tasks" ON public.tasks FOR SELECT USING (
-  created_by = auth.uid() OR assigned_to = auth.uid() OR 
+  created_by = auth.uid() OR assigned_to = auth.uid() OR
   public.is_circle_member(circle_id)
 );
 CREATE POLICY "Users can create tasks" ON public.tasks FOR INSERT WITH CHECK (
@@ -203,7 +186,6 @@ CREATE POLICY "Task owners and circle admins can delete" ON public.tasks FOR DEL
   created_by = auth.uid() OR public.is_circle_admin(circle_id)
 );
 
--- Goals
 CREATE POLICY "Circle members can view goals" ON public.goals FOR SELECT USING (
   public.is_circle_member(circle_id)
 );
@@ -215,7 +197,6 @@ CREATE POLICY "Goal owners and circle members can delete" ON public.goals FOR DE
   created_by = auth.uid() OR public.is_circle_admin(circle_id)
 );
 
--- Comments
 CREATE POLICY "Users can view comments" ON public.comments FOR SELECT USING (
   target_type = 'task' AND target_id IN (
     SELECT id FROM public.tasks WHERE created_by = auth.uid() OR assigned_to = auth.uid() OR public.is_circle_member(circle_id)
@@ -227,12 +208,10 @@ CREATE POLICY "Users can view comments" ON public.comments FOR SELECT USING (
 CREATE POLICY "Users can create comments" ON public.comments FOR INSERT WITH CHECK (user_id = auth.uid());
 CREATE POLICY "Comment authors can update comments" ON public.comments FOR UPDATE USING (user_id = auth.uid());
 
--- Notifications
 CREATE POLICY "Users can view notifications" ON public.notifications FOR SELECT USING (user_id = auth.uid());
 CREATE POLICY "Users can update notifications" ON public.notifications FOR UPDATE USING (user_id = auth.uid());
 CREATE POLICY "Authenticated users can create notifications" ON public.notifications FOR INSERT WITH CHECK (auth.uid() IS NOT NULL);
 
--- Activity Logs
 CREATE POLICY "Circle members can view activity" ON public.activity_logs FOR SELECT USING (
   public.is_circle_member(circle_id)
 );
@@ -240,7 +219,6 @@ CREATE POLICY "Circle members can create activity" ON public.activity_logs FOR I
   public.is_circle_member(circle_id)
 );
 
--- Function to generate invite code
 CREATE OR REPLACE FUNCTION generate_invite_code()
 RETURNS TEXT AS $$
 BEGIN
@@ -250,7 +228,6 @@ $$ LANGUAGE plpgsql;
 
 ALTER TABLE public.circles ALTER COLUMN invite_code SET DEFAULT generate_invite_code();
 
--- Function to handle new user signup
 CREATE OR REPLACE FUNCTION handle_new_user()
 RETURNS TRIGGER AS $$
 BEGIN
@@ -296,7 +273,6 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
--- Trigger for new user signup
 CREATE TRIGGER on_auth_user_created
   AFTER INSERT ON auth.users
   FOR EACH ROW EXECUTE FUNCTION handle_new_user();

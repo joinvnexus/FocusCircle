@@ -38,7 +38,6 @@ export function TaskForm({
       status: "todo",
       dueDate: "",
       circleId: "personal",
-      assignedTo: "",
       goalId: "none",
     },
   });
@@ -64,7 +63,6 @@ export function TaskForm({
         status: "todo",
         dueDate: "",
         circleId: "personal",
-        assignedTo: "",
         goalId: "none",
       });
     });

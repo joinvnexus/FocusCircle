@@ -60,6 +60,10 @@ export async function createTaskAction(payload: unknown) {
     return { error: "Unauthorized" };
   }
 
+  const assignedTo = parsed.data.assignedTo || user.id;
+  const circleId = parsed.data.circleId || null;
+  const goalId = parsed.data.goalId || null;
+
   const { data: task, error } = await supabase
     .from("tasks")
     .insert({
@@ -68,10 +72,10 @@ export async function createTaskAction(payload: unknown) {
     status: parsed.data.status,
     priority: parsed.data.priority,
     due_date: parsed.data.dueDate ?? null,
-    assigned_to: parsed.data.assignedTo ?? user.id,
+    assigned_to: assignedTo,
     created_by: user.id,
-    circle_id: parsed.data.circleId ?? null,
-    goal_id: parsed.data.goalId ?? null,
+    circle_id: circleId,
+    goal_id: goalId,
     })
     .select("*")
     .single();
@@ -111,6 +115,9 @@ export async function updateTaskAction(taskId: string, payload: unknown) {
 
   const supabase = await createClient();
   const { data: currentTask } = await supabase.from("tasks").select("*").eq("id", taskId).single();
+  const assignedTo = parsed.data.assignedTo || currentTask?.assigned_to || null;
+  const circleId = parsed.data.circleId || null;
+  const goalId = parsed.data.goalId || null;
   const { error } = await supabase
     .from("tasks")
     .update({
@@ -119,9 +126,9 @@ export async function updateTaskAction(taskId: string, payload: unknown) {
       status: parsed.data.status,
       priority: parsed.data.priority,
       due_date: parsed.data.dueDate ?? null,
-      assigned_to: parsed.data.assignedTo ?? currentTask?.assigned_to ?? null,
-      circle_id: parsed.data.circleId ?? null,
-      goal_id: parsed.data.goalId ?? null,
+      assigned_to: assignedTo,
+      circle_id: circleId,
+      goal_id: goalId,
     })
     .eq("id", taskId);
 

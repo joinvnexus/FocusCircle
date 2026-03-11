@@ -1,5 +1,13 @@
 import { z } from "zod";
 
+const optionalUuid = z.union([z.string().uuid(), z.literal("")]).optional().transform((value) => {
+  if (!value) {
+    return undefined;
+  }
+
+  return value;
+});
+
 export const signUpSchema = z.object({
   fullName: z.string().min(2, "Full name is required"),
   email: z.email("Enter a valid email"),
@@ -27,9 +35,9 @@ export const taskSchema = z.object({
   dueDate: z.string().optional(),
   priority: z.enum(["low", "medium", "high"]),
   status: z.enum(["todo", "in_progress", "completed"]).default("todo"),
-  circleId: z.string().optional(),
-  assignedTo: z.string().optional(),
-  goalId: z.string().optional(),
+  circleId: optionalUuid,
+  assignedTo: optionalUuid,
+  goalId: optionalUuid,
 });
 
 export const circleSchema = z.object({
