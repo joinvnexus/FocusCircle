@@ -18,7 +18,7 @@ async function createActivityAndNotifications({
   actorId: string;
   actionType: string;
   entityId: string;
-  metadata?: Record<string, unknown>;
+  metadata?: Record<string, unknown> | null;
   notificationUserId?: string | null;
   notification?: { type: string; title: string; message: string; data?: Record<string, unknown> };
 }) {
@@ -31,7 +31,7 @@ async function createActivityAndNotifications({
       action_type: actionType,
       entity_type: "task",
       entity_id: entityId,
-      metadata: metadata ?? null,
+      metadata: metadata ?? undefined,
     });
   }
 
@@ -41,7 +41,7 @@ async function createActivityAndNotifications({
       type: notification.type,
       title: notification.title,
       message: notification.message,
-      data: notification.data ?? null,
+      data: notification.data ?? undefined,
     });
   }
 }
