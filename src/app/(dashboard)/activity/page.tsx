@@ -1,14 +1,28 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { getActivityPageData } from "@/lib/data";
+import { getActivityPageData, getCirclesForUser } from "@/lib/data";
 import { requireUser } from "@/lib/auth";
 import { formatStatusLabel } from "@/lib/utils";
+import { RealtimeRefresh } from "@/components/shared/realtime-refresh";
 
 export default async function ActivityPage() {
   const user = await requireUser();
-  const activities = await getActivityPageData(user.id);
+  const [activities, circles] = await Promise.all([
+    getActivityPageData(user.id),
+    getCirclesForUser(user.id),
+  ]);
+  const circleIds = circles
+    .map((entry) => (entry.circles as { id: string } | null)?.id)
+    .filter(Boolean) as string[];
 
   return (
     <div className="space-y-6">
+      <RealtimeRefresh
+        subscriptions={
+          circleIds.length
+            ? [{ channel: `activity-${user.id}`, table: "activity_logs", filter: `circle_id=in.(${circleIds.join(",")})` }]
+            : []
+        }
+      />
       <div>
         <h1 className="text-3xl font-semibold">Activity</h1>
         <p className="text-muted-foreground">An audit-friendly view of what changed across your circles.</p>

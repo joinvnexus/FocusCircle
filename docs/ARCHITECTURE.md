@@ -7,7 +7,7 @@
 - Auth: Supabase Auth with email/password, email verification, password reset, and session cookies handled through middleware.
 - Realtime: Supabase Realtime subscriptions for tasks, notifications, and activity feeds.
 - Storage: Supabase Storage for avatar uploads.
-- Deployment: Vercel frontend with environment variables for Supabase project credentials.
+- Deployment: Vercel frontend with environment variables for Supabase project credentials and email delivery provider.
 
 ## Domain Model
 - `users`: profile and preferences for authenticated users.
@@ -80,6 +80,7 @@
 
 ## Deployment Checklist
 - Configure `NEXT_PUBLIC_SUPABASE_URL` and `NEXT_PUBLIC_SUPABASE_ANON_KEY`.
+- Configure `RESEND_API_KEY`, `RESEND_FROM_EMAIL`, and `NEXT_PUBLIC_APP_URL` for email notifications.
 - Apply `supabase/schema.sql`.
 - Enable Auth email templates and redirect URLs in Supabase.
 - Configure Storage bucket for avatars.

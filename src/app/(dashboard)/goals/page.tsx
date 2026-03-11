@@ -4,13 +4,22 @@ import { Progress } from "@/components/ui/progress";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { getGoalsPageData } from "@/lib/data";
 import { requireUser } from "@/lib/auth";
+import { RealtimeRefresh } from "@/components/shared/realtime-refresh";
 
 export default async function GoalsPage() {
   const user = await requireUser();
   const { circles, goals } = await getGoalsPageData(user.id);
+  const circleIds = (circles as Array<{ id: string }>).map((circle) => circle.id);
 
   return (
     <div className="space-y-6">
+      <RealtimeRefresh
+        subscriptions={
+          circleIds.length
+            ? [{ channel: `goals-${user.id}`, table: "goals", filter: `circle_id=in.(${circleIds.join(",")})` }]
+            : []
+        }
+      />
       <div>
         <h1 className="text-3xl font-semibold">Goals</h1>
         <p className="text-muted-foreground">Define shared outcomes for your circles and track how task completion moves them forward.</p>

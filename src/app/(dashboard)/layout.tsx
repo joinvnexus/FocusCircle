@@ -17,7 +17,7 @@ import {
   Users,
   X,
 } from 'lucide-react'
-import { Avatar, AvatarFallback } from '@/components/ui/avatar'
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { Button } from '@/components/ui/button'
 import { ThemeToggle } from '@/components/shared/theme-toggle'
 
@@ -128,6 +128,9 @@ export default function DashboardLayout({
           <div className="border-t p-4 space-y-3">
             <div className="flex items-center space-x-3">
               <Avatar>
+                {appUser?.avatar_url ? (
+                  <AvatarImage src={appUser.avatar_url} alt={appUser.full_name || 'User avatar'} />
+                ) : null}
                 <AvatarFallback>
                   {getInitials(appUser?.full_name || user.email || 'U')}
                 </AvatarFallback>

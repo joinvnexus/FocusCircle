@@ -2,7 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
-import { profileSchema } from "@/lib/validators";
+import { avatarSchema, profileSchema } from "@/lib/validators";
 
 export async function updateProfileAction(payload: unknown) {
   const parsed = profileSchema.safeParse(payload);
@@ -50,6 +50,35 @@ export async function updateProfileAction(payload: unknown) {
     if (authError) {
       return { error: authError.message };
     }
+  }
+
+  revalidatePath("/profile");
+  revalidatePath("/dashboard");
+  return { error: null };
+}
+
+export async function updateAvatarAction(payload: unknown) {
+  const parsed = avatarSchema.safeParse(payload);
+  if (!parsed.success) {
+    return { error: parsed.error.issues[0]?.message ?? "Invalid avatar update" };
+  }
+
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  if (!user) {
+    return { error: "Unauthorized" };
+  }
+
+  const { error } = await supabase
+    .from("users")
+    .update({ avatar_url: parsed.data.avatarUrl })
+    .eq("id", user.id);
+
+  if (error) {
+    return { error: error.message };
   }
 
   revalidatePath("/profile");

@@ -4,6 +4,7 @@ import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { getNotificationsPageData } from "@/lib/data";
 import { requireUser } from "@/lib/auth";
+import { RealtimeRefresh } from "@/components/shared/realtime-refresh";
 
 export default async function NotificationsPage() {
   const user = await requireUser();
@@ -11,6 +12,11 @@ export default async function NotificationsPage() {
 
   return (
     <div className="space-y-6">
+      <RealtimeRefresh
+        subscriptions={[
+          { channel: `notifications-${user.id}`, table: "notifications", filter: `user_id=eq.${user.id}` },
+        ]}
+      />
       <div className="flex items-center justify-between gap-4">
         <div>
           <h1 className="text-3xl font-semibold">Notifications</h1>

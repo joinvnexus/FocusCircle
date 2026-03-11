@@ -27,10 +27,14 @@
 - Activity feed and notification center
 - Rate limiting on mutable API routes
 - TypeScript verification passing
+- Avatar upload flow with Supabase Storage UI
+- Realtime subscriptions wired into key dashboard pages
+- Email notification delivery for notification preferences beyond in-app records
 
 ## Remaining Follow-Up
-- Add avatar upload flow with Supabase Storage UI
-- Add dedicated automated tests for validators, forms, and circle/task integration flows
-- Add Supabase generated database types if you want typed query inference instead of normalized `any` payloads
-- Wire realtime subscriptions into the visible UI for live cross-session updates
-- Add email notification delivery for notification preferences beyond in-app records
+- Add automated tests:
+  - Zod validators (tasks, goals, circles, comments)
+  - Form flows (signup/login/reset, task create/edit, circle create/invite)
+  - Integration (task-goal progress sync, activity log writes, notifications)
+- Generate Supabase database types for typed query inference
+- Add QA checklist and manual test script for release readiness

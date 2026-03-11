@@ -5,6 +5,7 @@ import { requireUser } from "@/lib/auth";
 import { CircleCreationCard, CircleJoinCard } from "@/components/forms/circle-form";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { RealtimeRefresh } from "@/components/shared/realtime-refresh";
 
 export default async function CirclesPage() {
   const user = await requireUser();
@@ -12,6 +13,11 @@ export default async function CirclesPage() {
 
   return (
     <div className="space-y-6">
+      <RealtimeRefresh
+        subscriptions={[
+          { channel: `circle-members-${user.id}`, table: "circle_members", filter: `user_id=eq.${user.id}` },
+        ]}
+      />
       <div>
         <h1 className="text-3xl font-semibold">Circles</h1>
         <p className="text-muted-foreground">Create collaboration spaces, share invite codes, and jump into each workspace.</p>

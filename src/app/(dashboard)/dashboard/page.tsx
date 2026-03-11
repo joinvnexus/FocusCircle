@@ -5,6 +5,7 @@ import { formatDate, formatRelativeTime, formatStatusLabel, getPriorityColor, ge
 import { GoalProgressChart, WeeklyTasksChart } from "@/components/dashboard/productivity-charts";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { RealtimeRefresh } from "@/components/shared/realtime-refresh";
 
 export default async function DashboardPage() {
   const user = await requireUser();
@@ -13,6 +14,13 @@ export default async function DashboardPage() {
 
   return (
     <div className="space-y-6">
+      <RealtimeRefresh
+        subscriptions={[
+          { channel: `tasks-assigned-${user.id}`, table: "tasks", filter: `assigned_to=eq.${user.id}` },
+          { channel: `tasks-created-${user.id}`, table: "tasks", filter: `created_by=eq.${user.id}` },
+          { channel: `notifications-${user.id}`, table: "notifications", filter: `user_id=eq.${user.id}` },
+        ]}
+      />
       <div>
         <h1 className="text-3xl font-semibold">Dashboard</h1>
         <p className="text-muted-foreground">Today&apos;s workload, circle momentum, and your recent productivity signal.</p>

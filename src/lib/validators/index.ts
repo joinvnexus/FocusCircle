@@ -29,6 +29,10 @@ export const profileSchema = z.object({
   password: z.string().min(8).optional().or(z.literal("")),
 });
 
+export const avatarSchema = z.object({
+  avatarUrl: z.string().url().nullable(),
+});
+
 export const taskSchema = z.object({
   title: z.string().min(2),
   description: z.string().max(600).optional(),

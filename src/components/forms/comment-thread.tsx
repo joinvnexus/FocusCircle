@@ -3,7 +3,7 @@
 import { useState, useTransition } from "react";
 import { toast } from "sonner";
 import { createCommentAction, toggleCommentReactionAction } from "@/app/actions/comments";
-import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { getInitials } from "@/lib/utils";
@@ -60,6 +60,9 @@ function CommentNode({
     <div className="space-y-3 rounded-2xl border p-4">
       <div className="flex items-start gap-3">
         <Avatar className="h-9 w-9">
+          {comment.users?.avatar_url ? (
+            <AvatarImage src={comment.users.avatar_url} alt={comment.users.full_name || "User avatar"} />
+          ) : null}
           <AvatarFallback>{getInitials(comment.users?.full_name ?? "U")}</AvatarFallback>
         </Avatar>
         <div className="flex-1 space-y-2">

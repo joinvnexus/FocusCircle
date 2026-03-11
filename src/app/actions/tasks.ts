@@ -2,6 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
+import { createNotificationWithEmail } from "@/lib/notifications";
 import { taskSchema } from "@/lib/validators";
 
 async function createActivityAndNotifications({
@@ -35,8 +36,8 @@ async function createActivityAndNotifications({
   }
 
   if (notificationUserId && notification) {
-    await supabase.from("notifications").insert({
-      user_id: notificationUserId,
+    await createNotificationWithEmail(supabase, {
+      userId: notificationUserId,
       type: notification.type,
       title: notification.title,
       message: notification.message,

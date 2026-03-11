@@ -7,6 +7,7 @@ import { Progress } from "@/components/ui/progress";
 import { getCircleWorkspace } from "@/lib/data";
 import { formatStatusLabel, getStatusColor } from "@/lib/utils";
 import { Badge } from "@/components/ui/badge";
+import { RealtimeRefresh } from "@/components/shared/realtime-refresh";
 
 export default async function CircleWorkspacePage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
@@ -16,8 +17,27 @@ export default async function CircleWorkspacePage({ params }: { params: Promise<
     return <div className="rounded-2xl border border-dashed p-8 text-sm text-muted-foreground">Circle not found or not accessible.</div>;
   }
 
+  const commentTargetIds = [
+    ...workspace.tasks.map((task) => task.id),
+    ...workspace.goals.map((goal) => goal.id),
+  ];
+  const subscriptions = [
+    { channel: `circle-tasks-${id}`, table: "tasks", filter: `circle_id=eq.${id}` },
+    { channel: `circle-goals-${id}`, table: "goals", filter: `circle_id=eq.${id}` },
+    { channel: `circle-activity-${id}`, table: "activity_logs", filter: `circle_id=eq.${id}` },
+    { channel: `circle-members-${id}`, table: "circle_members", filter: `circle_id=eq.${id}` },
+  ];
+  if (commentTargetIds.length) {
+    subscriptions.push({
+      channel: `circle-comments-${id}`,
+      table: "comments",
+      filter: `target_id=in.(${commentTargetIds.join(",")})`,
+    });
+  }
+
   return (
     <div className="space-y-6">
+      <RealtimeRefresh subscriptions={subscriptions} />
       <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
         <div>
           <h1 className="text-3xl font-semibold">{workspace.circle.name}</h1>
