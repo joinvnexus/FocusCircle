@@ -81,6 +81,7 @@
 ## Deployment Checklist
 - Configure `NEXT_PUBLIC_SUPABASE_URL` and `NEXT_PUBLIC_SUPABASE_ANON_KEY`.
 - Configure `RESEND_API_KEY`, `RESEND_FROM_EMAIL`, and `NEXT_PUBLIC_APP_URL` for email notifications.
+- Configure `CRON_SECRET` and schedule `/api/notifications/deadlines` to send deadline emails.
 - Apply `supabase/schema.sql`.
 - Enable Auth email templates and redirect URLs in Supabase.
 - Configure Storage bucket for avatars.

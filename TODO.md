@@ -30,6 +30,7 @@
 - Avatar upload flow with Supabase Storage UI
 - Realtime subscriptions wired into key dashboard pages
 - Email notification delivery for notification preferences beyond in-app records
+- Email notifications for comments, goal updates, and approaching deadlines
 
 ## Remaining Follow-Up
 - Add automated tests:

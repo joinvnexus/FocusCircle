@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
 import { extractMentions } from "@/lib/utils";
 import { commentSchema } from "@/lib/validators";
+import { createNotificationWithEmail } from "@/lib/notifications";
 
 export async function createCommentAction(payload: unknown) {
   const parsed = commentSchema.safeParse(payload);
@@ -34,7 +35,12 @@ export async function createCommentAction(payload: unknown) {
   }
 
   if (parsed.data.targetType === "goal") {
-    const { data: goal } = await supabase.from("goals").select("circle_id").eq("id", parsed.data.targetId).single();
+    const { data: goal } = await supabase
+      .from("goals")
+      .select("circle_id, title, created_by")
+      .eq("id", parsed.data.targetId)
+      .single();
+
     if (goal?.circle_id) {
       await supabase.from("activity_logs").insert({
         circle_id: goal.circle_id,
@@ -44,9 +50,38 @@ export async function createCommentAction(payload: unknown) {
         entity_id: comment.id,
         metadata: { targetType: "goal", targetId: parsed.data.targetId },
       });
+
+      const { data: members } = await supabase
+        .from("circle_members")
+        .select("user_id")
+        .eq("circle_id", goal.circle_id);
+
+      const recipients = new Set<string>([
+        ...(members ?? []).map((member) => member.user_id),
+        goal.created_by,
+      ]);
+
+      recipients.delete(user.id);
+
+      await Promise.all(
+        Array.from(recipients).map((recipientId) =>
+          createNotificationWithEmail(supabase, {
+            userId: recipientId,
+            type: "comment_added",
+            title: "New goal comment",
+            message: `A comment was added to "${goal.title}".`,
+            data: { goalId: parsed.data.targetId },
+          }),
+        ),
+      );
     }
   } else {
-    const { data: task } = await supabase.from("tasks").select("circle_id").eq("id", parsed.data.targetId).single();
+    const { data: task } = await supabase
+      .from("tasks")
+      .select("circle_id, title, assigned_to, created_by")
+      .eq("id", parsed.data.targetId)
+      .single();
+
     if (task?.circle_id) {
       await supabase.from("activity_logs").insert({
         circle_id: task.circle_id,
@@ -57,12 +92,31 @@ export async function createCommentAction(payload: unknown) {
         metadata: { targetType: "task", targetId: parsed.data.targetId },
       });
     }
+
+    if (task) {
+      const recipients = new Set<string>([task.assigned_to, task.created_by].filter(Boolean) as string[]);
+      recipients.delete(user.id);
+
+      await Promise.all(
+        Array.from(recipients).map((recipientId) =>
+          createNotificationWithEmail(supabase, {
+            userId: recipientId,
+            type: "comment_added",
+            title: "New task comment",
+            message: `A comment was added to "${task.title}".`,
+            data: { taskId: parsed.data.targetId },
+          }),
+        ),
+      );
+    }
   }
 
   revalidatePath("/activity");
   revalidatePath("/tasks");
   revalidatePath("/goals");
   revalidatePath("/circles");
+  revalidatePath("/notifications");
+  revalidatePath("/dashboard");
   return { error: null };
 }
 

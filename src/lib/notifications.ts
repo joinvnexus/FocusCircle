@@ -11,6 +11,8 @@ type NotificationPayload = {
   data?: Record<string, unknown>;
 };
 
+type PreferenceKey = "deadline_alerts" | "weekly_summary";
+
 const fallbackBaseUrl = "http://localhost:3000";
 
 function getAppUrl() {
@@ -20,6 +22,7 @@ function getAppUrl() {
 export async function createNotificationWithEmail(
   supabase: SupabaseClient,
   payload: NotificationPayload,
+  preferenceKey?: PreferenceKey,
 ) {
   const { error: insertError } = await supabase.from("notifications").insert({
     user_id: payload.userId,
@@ -39,8 +42,10 @@ export async function createNotificationWithEmail(
     .eq("id", payload.userId)
     .single();
 
-  const emailEnabled = userProfile?.notification_preferences?.email_notifications ?? true;
-  if (!userProfile?.email || !emailEnabled) {
+  const preferences = userProfile?.notification_preferences ?? null;
+  const emailEnabled = preferences?.email_notifications ?? true;
+  const preferenceEnabled = preferenceKey ? preferences?.[preferenceKey] ?? true : true;
+  if (!userProfile?.email || !emailEnabled || !preferenceEnabled) {
     return { error: null };
   }
 
