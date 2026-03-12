@@ -182,6 +182,9 @@ export default function DashboardLayout({
               Focus on your next best task and keep the circle aligned.
             </div>
             <div className="flex items-center space-x-2">
+              <Link href="/">
+                <Button variant="ghost" className="text-sm">Landing</Button>
+              </Link>
               <Link href="/notifications">
                 <Button variant="ghost" size="icon">
                   <Bell className="h-5 w-5" />
