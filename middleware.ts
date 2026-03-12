@@ -39,6 +39,7 @@ export async function middleware(request: NextRequest) {
       request.nextUrl.pathname.startsWith("/signup");
     const isProtected =
       request.nextUrl.pathname.startsWith("/dashboard") ||
+      request.nextUrl.pathname.startsWith("/admin") ||
       request.nextUrl.pathname.startsWith("/tasks") ||
       request.nextUrl.pathname.startsWith("/circles") ||
       request.nextUrl.pathname.startsWith("/goals") ||

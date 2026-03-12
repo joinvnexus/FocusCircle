@@ -80,3 +80,19 @@ export const passwordResetRequestSchema = z.object({
 export const passwordResetSchema = z.object({
   password: z.string().min(8, "Password must be at least 8 characters"),
 });
+
+export const adminUserUpdateSchema = z.object({
+  userId: z.string().uuid(),
+  isAdmin: z.boolean().optional(),
+  plan: z.enum(["free", "pro"]).optional(),
+  circleLimit: z.number().int().min(1).max(1000).optional(),
+  memberLimit: z.number().int().min(1).max(1000).optional(),
+});
+
+export const adminSubscriptionUpdateSchema = z.object({
+  subscriptionId: z.string().uuid(),
+  status: z.string().min(2).optional(),
+  priceId: z.string().min(2).optional(),
+  cancelAtPeriodEnd: z.boolean().optional(),
+  currentPeriodEnd: z.string().optional(),
+});
