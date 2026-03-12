@@ -72,19 +72,6 @@ export async function joinCircleAction(inviteCode: string) {
 
   if (error || !circleId) return { error: "Invite code not found" };
 
-  const { error: membershipError } = await supabase.from("circle_members").upsert(
-    {
-      circle_id: circleId,
-      user_id: user.id,
-      role: "member",
-    },
-    { onConflict: "circle_id,user_id" },
-  );
-
-  if (membershipError) {
-    return { error: membershipError.message };
-  }
-
   await supabase.from("activity_logs").insert({
     circle_id: circleId,
     actor_id: user.id,

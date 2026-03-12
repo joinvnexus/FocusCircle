@@ -8,6 +8,14 @@ const optionalUuid = z.union([z.string().uuid(), z.literal("")]).optional().tran
   return value;
 });
 
+const optionalDateString = z.union([z.string().min(1), z.literal("")]).optional().transform((value) => {
+  if (!value) {
+    return undefined;
+  }
+
+  return value;
+});
+
 export const signUpSchema = z.object({
   fullName: z.string().min(2, "Full name is required"),
   email: z.email("Enter a valid email"),
@@ -36,7 +44,7 @@ export const avatarSchema = z.object({
 export const taskSchema = z.object({
   title: z.string().min(2),
   description: z.string().max(600).optional(),
-  dueDate: z.string().optional(),
+  dueDate: optionalDateString,
   priority: z.enum(["low", "medium", "high"]),
   status: z.enum(["todo", "in_progress", "completed"]).default("todo"),
   circleId: optionalUuid,

@@ -32,18 +32,5 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Invalid invite code" }, { status: 404 });
   }
 
-  const { error: membershipError } = await supabase.from("circle_members").upsert(
-    {
-      circle_id: circleId,
-      user_id: user.id,
-      role: "member",
-    },
-    { onConflict: "circle_id,user_id" },
-  );
-
-  if (membershipError) {
-    return NextResponse.json({ error: membershipError.message }, { status: 400 });
-  }
-
   return NextResponse.json({ success: true, circleId });
 }

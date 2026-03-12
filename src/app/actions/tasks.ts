@@ -64,6 +64,7 @@ export async function createTaskAction(payload: unknown) {
   const assignedTo = parsed.data.assignedTo || user.id;
   const circleId = parsed.data.circleId || null;
   const goalId = parsed.data.goalId || null;
+  const dueDate = parsed.data.dueDate ? parsed.data.dueDate : null;
 
   const { data: task, error } = await supabase
     .from("tasks")
@@ -72,7 +73,7 @@ export async function createTaskAction(payload: unknown) {
     description: parsed.data.description ?? null,
     status: parsed.data.status,
     priority: parsed.data.priority,
-    due_date: parsed.data.dueDate ?? null,
+    due_date: dueDate,
     assigned_to: assignedTo,
     created_by: user.id,
     circle_id: circleId,
@@ -119,6 +120,7 @@ export async function updateTaskAction(taskId: string, payload: unknown) {
   const assignedTo = parsed.data.assignedTo || currentTask?.assigned_to || null;
   const circleId = parsed.data.circleId || null;
   const goalId = parsed.data.goalId || null;
+  const dueDate = parsed.data.dueDate ? parsed.data.dueDate : null;
   const { error } = await supabase
     .from("tasks")
     .update({
@@ -126,7 +128,7 @@ export async function updateTaskAction(taskId: string, payload: unknown) {
       description: parsed.data.description ?? null,
       status: parsed.data.status,
       priority: parsed.data.priority,
-      due_date: parsed.data.dueDate ?? null,
+      due_date: dueDate,
       assigned_to: assignedTo,
       circle_id: circleId,
       goal_id: goalId,

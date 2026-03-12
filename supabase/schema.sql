@@ -193,8 +193,7 @@ BEGIN
 
   INSERT INTO public.circle_members (circle_id, user_id, role)
   VALUES (target_circle_id, auth.uid(), 'member')
-  ON CONFLICT (circle_id, user_id) DO UPDATE
-  SET role = 'member';
+  ON CONFLICT (circle_id, user_id) DO NOTHING;
 
   RETURN target_circle_id;
 END;
