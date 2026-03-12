@@ -62,7 +62,7 @@ describe("updateGoalProgressAction", () => {
     expect(firstCall).toBeDefined();
     expect((firstCall as unknown as [unknown, { userId: string; type: string }])[1]).toMatchObject({
       userId: "22222222-2222-2222-2222-222222222222",
-      type: "goal_updated",
+      type: "goal_update",
     });
   });
 });

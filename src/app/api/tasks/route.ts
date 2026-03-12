@@ -51,6 +51,7 @@ export async function POST(request: Request) {
   const assignedTo = parsed.data.assignedTo || user.id;
   const circleId = parsed.data.circleId || null;
   const goalId = parsed.data.goalId || null;
+  const dueDate = parsed.data.dueDate ? parsed.data.dueDate : null;
 
   const { data, error } = await supabase
     .from("tasks")
@@ -59,7 +60,7 @@ export async function POST(request: Request) {
       description: parsed.data.description ?? null,
       status: parsed.data.status,
       priority: parsed.data.priority,
-      due_date: parsed.data.dueDate ?? null,
+      due_date: dueDate,
       assigned_to: assignedTo,
       created_by: user.id,
       circle_id: circleId,

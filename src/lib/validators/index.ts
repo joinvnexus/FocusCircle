@@ -47,9 +47,9 @@ export const taskSchema = z.object({
   dueDate: optionalDateString,
   priority: z.enum(["low", "medium", "high"]),
   status: z.enum(["todo", "in_progress", "completed"]).default("todo"),
-  circleId: optionalUuid,
+  circleId: z.preprocess((value) => (value === "personal" ? undefined : value), optionalUuid),
   assignedTo: optionalUuid,
-  goalId: optionalUuid,
+  goalId: z.preprocess((value) => (value === "none" ? undefined : value), optionalUuid),
 });
 
 export const circleSchema = z.object({

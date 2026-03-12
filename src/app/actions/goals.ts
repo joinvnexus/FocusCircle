@@ -57,7 +57,7 @@ export async function createGoalAction(payload: unknown) {
     Array.from(recipients).map((recipientId) =>
       createNotificationWithEmail(supabase, {
         userId: recipientId,
-        type: "goal_created",
+        type: "goal_update",
         title: "New goal created",
         message: `A new goal "${goal.title}" was added to your circle.`,
         data: { goalId: goal.id },
@@ -110,7 +110,7 @@ export async function updateGoalProgressAction(goalId: string, progress: number)
       Array.from(recipients).map((recipientId) =>
         createNotificationWithEmail(supabase, {
           userId: recipientId,
-          type: "goal_updated",
+          type: "goal_update",
           title: "Goal progress updated",
           message: `Progress on "${goal.title}" is now ${progress}%.`,
           data: { goalId },
