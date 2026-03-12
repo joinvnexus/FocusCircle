@@ -63,17 +63,18 @@ export async function joinCircleAction(inviteCode: string) {
 
   if (!user) return { error: "Unauthorized" };
 
-  const { data: circle, error } = await supabase
-    .from("circles")
-    .select("id")
-    .eq("invite_code", inviteCode.trim().toUpperCase())
-    .single();
+  const normalizedCode = inviteCode.replace(/[^a-z0-9]/gi, "").toUpperCase();
+  if (!normalizedCode) return { error: "Invite code is required" };
 
-  if (error || !circle) return { error: "Invite code not found" };
+  const { data: circleId, error } = await supabase.rpc("join_circle_by_invite", {
+    invite_code_input: normalizedCode,
+  });
+
+  if (error || !circleId) return { error: "Invite code not found" };
 
   const { error: membershipError } = await supabase.from("circle_members").upsert(
     {
-      circle_id: circle.id,
+      circle_id: circleId,
       user_id: user.id,
       role: "member",
     },
@@ -85,11 +86,11 @@ export async function joinCircleAction(inviteCode: string) {
   }
 
   await supabase.from("activity_logs").insert({
-    circle_id: circle.id,
+    circle_id: circleId,
     actor_id: user.id,
     action_type: "member_joined",
     entity_type: "circle_member",
-    entity_id: circle.id,
+    entity_id: circleId,
     metadata: { userId: user.id },
   });
 

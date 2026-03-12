@@ -18,21 +18,23 @@ export async function POST(request: Request) {
   }
 
   const body = await request.json();
-  const inviteCode = String(body?.inviteCode ?? "").trim().toUpperCase();
+  const inviteCode = String(body?.inviteCode ?? "").replace(/[^a-z0-9]/gi, "").toUpperCase();
 
   if (!inviteCode) {
     return NextResponse.json({ error: "inviteCode is required" }, { status: 422 });
   }
 
-  const { data: circle, error } = await supabase.from("circles").select("id").eq("invite_code", inviteCode).single();
+  const { data: circleId, error } = await supabase.rpc("join_circle_by_invite", {
+    invite_code_input: inviteCode,
+  });
 
-  if (error || !circle) {
+  if (error || !circleId) {
     return NextResponse.json({ error: "Invalid invite code" }, { status: 404 });
   }
 
   const { error: membershipError } = await supabase.from("circle_members").upsert(
     {
-      circle_id: circle.id,
+      circle_id: circleId,
       user_id: user.id,
       role: "member",
     },
@@ -43,5 +45,5 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: membershipError.message }, { status: 400 });
   }
 
-  return NextResponse.json({ success: true, circleId: circle.id });
+  return NextResponse.json({ success: true, circleId });
 }
