@@ -28,7 +28,10 @@ export async function POST(request: Request) {
     invite_code_input: inviteCode,
   });
 
-  if (error || !circleId) {
+  if (error) {
+    return NextResponse.json({ error: error.message ?? "Invalid invite code" }, { status: 400 });
+  }
+  if (!circleId) {
     return NextResponse.json({ error: "Invalid invite code" }, { status: 404 });
   }
 

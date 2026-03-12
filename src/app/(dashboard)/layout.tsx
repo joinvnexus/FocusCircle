@@ -13,6 +13,7 @@ import {
   LogOut,
   Menu,
   Settings,
+  Shield,
   Target,
   Users,
   X,
@@ -23,15 +24,6 @@ import { ThemeToggle } from '@/components/shared/theme-toggle'
 
 export const dynamic = 'force-dynamic'
 
-const navigation = [
-  { name: 'Dashboard', href: '/dashboard', icon: LayoutDashboard },
-  { name: 'My Tasks', href: '/tasks', icon: CheckSquare },
-  { name: 'Circles', href: '/circles', icon: Users },
-  { name: 'Goals', href: '/goals', icon: Target },
-  { name: 'Activity', href: '/activity', icon: Activity },
-  { name: 'Notifications', href: '/notifications', icon: Bell },
-]
-
 export default function DashboardLayout({
   children,
 }: {
@@ -41,6 +33,16 @@ export default function DashboardLayout({
   const router = useRouter()
   const pathname = usePathname()
   const [sidebarOpen, setSidebarOpen] = useState(false)
+
+  const navigation = [
+    { name: 'Dashboard', href: '/dashboard', icon: LayoutDashboard },
+    { name: 'My Tasks', href: '/tasks', icon: CheckSquare },
+    { name: 'Circles', href: '/circles', icon: Users },
+    { name: 'Goals', href: '/goals', icon: Target },
+    { name: 'Activity', href: '/activity', icon: Activity },
+    { name: 'Notifications', href: '/notifications', icon: Bell },
+    ...(appUser?.is_admin ? [{ name: 'Admin', href: '/admin', icon: Shield }] : []),
+  ]
 
   useEffect(() => {
     if (!loading && !user) {

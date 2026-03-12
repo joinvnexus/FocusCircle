@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { MarketingShell } from "@/components/marketing/marketing-shell";
+import { CheckoutButton } from "@/components/marketing/checkout-button";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
@@ -43,7 +44,11 @@ export default function PricingPage() {
                     <div key={feature} className="rounded-xl border px-4 py-3 text-sm">{feature}</div>
                   ))}
                 </div>
-                <Link href="/signup"><Button className="w-full">{tier.name === "Pro" ? "Start free trial" : "Create free account"}</Button></Link>
+                {tier.name === "Pro" ? (
+                  <CheckoutButton label="Upgrade to Pro" />
+                ) : (
+                  <Link href="/signup"><Button className="w-full">Create free account</Button></Link>
+                )}
               </CardContent>
             </Card>
           ))}

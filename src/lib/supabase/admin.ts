@@ -1,15 +1,17 @@
-import { createClient } from "@supabase/supabase-js";
-import { getSupabaseEnv } from "@/lib/env";
+import { createClient as createSupabaseClient } from "@supabase/supabase-js";
 
 export function createAdminClient() {
-  const { url } = getSupabaseEnv();
-  const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+  const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
 
-  if (!serviceRoleKey) {
+  if (!url) {
+    throw new Error("Missing required environment variable: NEXT_PUBLIC_SUPABASE_URL");
+  }
+  if (!serviceKey) {
     throw new Error("Missing required environment variable: SUPABASE_SERVICE_ROLE_KEY");
   }
 
-  return createClient(url, serviceRoleKey, {
+  return createSupabaseClient(url, serviceKey, {
     auth: {
       persistSession: false,
       autoRefreshToken: false,

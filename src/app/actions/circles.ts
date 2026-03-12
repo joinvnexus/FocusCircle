@@ -19,6 +19,16 @@ export async function createCircleAction(payload: unknown) {
 
   if (!user) return { error: "Unauthorized" };
 
+  const [{ data: ownerProfile }, { count: ownedCount }] = await Promise.all([
+    supabase.from("users").select("plan, circle_limit").eq("id", user.id).single(),
+    supabase.from("circles").select("id", { count: "exact", head: true }).eq("owner_id", user.id),
+  ]);
+
+  const circleLimit = ownerProfile?.circle_limit ?? null;
+  if (circleLimit !== null && (ownedCount ?? 0) >= circleLimit) {
+    return { error: "Circle limit reached. Upgrade to Pro for unlimited circles." };
+  }
+
   const inviteCode = randomInviteCode();
   const { data: circle, error } = await supabase
     .from("circles")
@@ -70,7 +80,8 @@ export async function joinCircleAction(inviteCode: string) {
     invite_code_input: normalizedCode,
   });
 
-  if (error || !circleId) return { error: "Invite code not found" };
+  if (error) return { error: error.message ?? "Invite code not found" };
+  if (!circleId) return { error: "Invite code not found" };
 
   await supabase.from("activity_logs").insert({
     circle_id: circleId,

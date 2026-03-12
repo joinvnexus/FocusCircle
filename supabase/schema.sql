@@ -3,6 +3,7 @@
 
 -- Enable UUID extension
 CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
+CREATE EXTENSION IF NOT EXISTS "pgcrypto";
 
 -- Users table (extends Supabase auth.users)
 CREATE TABLE IF NOT EXISTS public.users (
@@ -12,6 +13,11 @@ CREATE TABLE IF NOT EXISTS public.users (
   avatar_url TEXT,
   timezone TEXT NOT NULL DEFAULT 'UTC',
   notification_preferences JSONB NOT NULL DEFAULT '{"email_notifications": true, "deadline_alerts": true, "weekly_summary": false}'::jsonb,
+  is_admin BOOLEAN NOT NULL DEFAULT FALSE,
+  plan TEXT NOT NULL DEFAULT 'free',
+  stripe_customer_id TEXT UNIQUE,
+  circle_limit INTEGER DEFAULT 3,
+  member_limit INTEGER DEFAULT 5,
   created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
   updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
@@ -94,6 +100,20 @@ CREATE TABLE IF NOT EXISTS public.notifications (
   data JSONB
 );
 
+-- Subscriptions table
+CREATE TABLE IF NOT EXISTS public.subscriptions (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  user_id UUID NOT NULL REFERENCES public.users(id) ON DELETE CASCADE,
+  stripe_customer_id TEXT NOT NULL,
+  stripe_subscription_id TEXT UNIQUE NOT NULL,
+  status TEXT NOT NULL,
+  price_id TEXT,
+  current_period_end TIMESTAMP WITH TIME ZONE,
+  cancel_at_period_end BOOLEAN NOT NULL DEFAULT FALSE,
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+  updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
 -- Activity logs table
 CREATE TABLE IF NOT EXISTS public.activity_logs (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
@@ -118,6 +138,7 @@ CREATE INDEX IF NOT EXISTS idx_notifications_user_id ON public.notifications(use
 CREATE INDEX IF NOT EXISTS idx_notifications_is_read ON public.notifications(is_read);
 CREATE INDEX IF NOT EXISTS idx_activity_logs_circle_id ON public.activity_logs(circle_id);
 CREATE INDEX IF NOT EXISTS idx_comments_target ON public.comments(target_type, target_id);
+CREATE INDEX IF NOT EXISTS idx_subscriptions_user_id ON public.subscriptions(user_id);
 
 -- Enable Row Level Security (RLS)
 ALTER TABLE public.users ENABLE ROW LEVEL SECURITY;
@@ -128,6 +149,7 @@ ALTER TABLE public.goals ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.comments ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.notifications ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.activity_logs ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.subscriptions ENABLE ROW LEVEL SECURITY;
 
 -- RLS helper functions
 CREATE OR REPLACE FUNCTION public.is_circle_member(target_circle_id UUID)
@@ -159,6 +181,20 @@ AS $$
   );
 $$;
 
+CREATE OR REPLACE FUNCTION public.is_admin()
+RETURNS BOOLEAN
+LANGUAGE sql
+SECURITY DEFINER
+SET search_path = public
+AS $$
+  SELECT EXISTS (
+    SELECT 1
+    FROM public.users
+    WHERE id = auth.uid()
+      AND is_admin = TRUE
+  );
+$$;
+
 -- Join circle via invite code without exposing circle records
 CREATE OR REPLACE FUNCTION public.join_circle_by_invite(invite_code_input TEXT)
 RETURNS UUID
@@ -169,6 +205,9 @@ AS $$
 DECLARE
   normalized_code TEXT;
   target_circle_id UUID;
+  target_owner_id UUID;
+  limit_value INTEGER;
+  member_count INTEGER;
 BEGIN
   IF invite_code_input IS NULL OR length(trim(invite_code_input)) = 0 THEN
     RETURN NULL;
@@ -180,8 +219,8 @@ BEGIN
 
   normalized_code := upper(regexp_replace(invite_code_input, '[^A-Za-z0-9]', '', 'g'));
 
-  SELECT id
-  INTO target_circle_id
+  SELECT id, owner_id
+  INTO target_circle_id, target_owner_id
   FROM public.circles
   WHERE invite_code = normalized_code
     AND (invite_expires_at IS NULL OR invite_expires_at > now())
@@ -189,6 +228,18 @@ BEGIN
 
   IF target_circle_id IS NULL THEN
     RETURN NULL;
+  END IF;
+
+  SELECT member_limit
+  INTO limit_value
+  FROM public.users
+  WHERE id = target_owner_id;
+
+  IF limit_value IS NOT NULL THEN
+    SELECT COUNT(*) INTO member_count FROM public.circle_members WHERE circle_id = target_circle_id;
+    IF member_count >= limit_value THEN
+      RAISE EXCEPTION 'Circle member limit reached';
+    END IF;
   END IF;
 
   INSERT INTO public.circle_members (circle_id, user_id, role)
@@ -202,6 +253,7 @@ $$;
 -- RLS Policies
 -- Users
 CREATE POLICY "Users can view own profile" ON public.users FOR SELECT USING (auth.uid() = id);
+CREATE POLICY "Admins can view all users" ON public.users FOR SELECT USING (public.is_admin());
 CREATE POLICY "Users can update own profile" ON public.users FOR UPDATE USING (auth.uid() = id);
 CREATE POLICY "Users can insert own profile" ON public.users FOR INSERT WITH CHECK (auth.uid() = id);
 
@@ -271,6 +323,10 @@ CREATE POLICY "Comment authors can update comments" ON public.comments FOR UPDAT
 CREATE POLICY "Users can view notifications" ON public.notifications FOR SELECT USING (user_id = auth.uid());
 CREATE POLICY "Users can update notifications" ON public.notifications FOR UPDATE USING (user_id = auth.uid());
 CREATE POLICY "Authenticated users can create notifications" ON public.notifications FOR INSERT WITH CHECK (auth.uid() IS NOT NULL);
+
+-- Subscriptions
+CREATE POLICY "Users can view own subscription" ON public.subscriptions FOR SELECT USING (user_id = auth.uid());
+CREATE POLICY "Admins can view all subscriptions" ON public.subscriptions FOR SELECT USING (public.is_admin());
 
 -- Activity Logs
 CREATE POLICY "Circle members can view activity" ON public.activity_logs FOR SELECT USING (
@@ -359,6 +415,10 @@ CREATE TRIGGER update_goals_updated_at
 
 CREATE TRIGGER update_comments_updated_at
   BEFORE UPDATE ON public.comments
+  FOR EACH ROW EXECUTE FUNCTION public.update_updated_at_column();
+
+CREATE TRIGGER update_subscriptions_updated_at
+  BEFORE UPDATE ON public.subscriptions
   FOR EACH ROW EXECUTE FUNCTION public.update_updated_at_column();
 
 CREATE TRIGGER sync_goal_progress_on_task_change

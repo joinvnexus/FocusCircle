@@ -9,6 +9,11 @@ export interface AppUser {
   full_name: string;
   avatar_url: string | null;
   timezone: string;
+  is_admin: boolean;
+  plan: "free" | "pro";
+  stripe_customer_id: string | null;
+  circle_limit: number | null;
+  member_limit: number | null;
   notification_preferences: {
     email_notifications: boolean;
     deadline_alerts: boolean;
