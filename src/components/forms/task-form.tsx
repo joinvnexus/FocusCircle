@@ -41,6 +41,8 @@ export function TaskForm({
       goalId: "none",
     },
   });
+  const circleValue = form.watch("circleId");
+  const goalValue = form.watch("goalId");
 
   const onSubmit = form.handleSubmit((values) => {
     startTransition(async () => {
@@ -98,13 +100,21 @@ export function TaskForm({
             <Label htmlFor="dueDate">Due date</Label>
             <Input id="dueDate" type="datetime-local" {...form.register("dueDate")} />
           </div>
-          <FieldSelect label="Circle" value={form.watch("circleId") ?? "personal"} onChange={(value) => form.setValue("circleId", value)}>
+          <FieldSelect
+            label="Circle"
+            value={typeof circleValue === "string" ? circleValue : "personal"}
+            onChange={(value) => form.setValue("circleId", value)}
+          >
             <SelectItem value="personal">Personal</SelectItem>
             {circles.map((circle) => (
               <SelectItem key={circle.id} value={circle.id}>{circle.name}</SelectItem>
             ))}
           </FieldSelect>
-          <FieldSelect label="Goal" value={form.watch("goalId") ?? "none"} onChange={(value) => form.setValue("goalId", value)}>
+          <FieldSelect
+            label="Goal"
+            value={typeof goalValue === "string" ? goalValue : "none"}
+            onChange={(value) => form.setValue("goalId", value)}
+          >
             <SelectItem value="none">No goal</SelectItem>
             {goalOptions.map((goal) => (
               <SelectItem key={goal.id} value={goal.id}>{goal.title}</SelectItem>

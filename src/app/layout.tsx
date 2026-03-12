@@ -1,4 +1,5 @@
 import type { Metadata } from "next"
+import { Fraunces, Space_Grotesk } from "next/font/google"
 import "./globals.css"
 import { ThemeProvider } from "@/components/theme-provider"
 import { AuthProvider } from "@/contexts/AuthContext"
@@ -9,6 +10,18 @@ export const metadata: Metadata = {
   description: "Manage tasks, collaborate in circles, and track shared goals with FocusCircle.",
 }
 
+const headingFont = Fraunces({
+  subsets: ["latin"],
+  weight: ["600", "700"],
+  variable: "--font-heading",
+})
+
+const bodyFont = Space_Grotesk({
+  subsets: ["latin"],
+  weight: ["400", "500", "600", "700"],
+  variable: "--font-body",
+})
+
 export default function RootLayout({
   children,
 }: Readonly<{
@@ -16,7 +29,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" suppressHydrationWarning>
-      <body className="font-sans">
+      <body className={`${bodyFont.variable} ${headingFont.variable} font-body`}>
         <ThemeProvider
           attribute="class"
           defaultTheme="system"
