@@ -1,7 +1,7 @@
 import { headers } from "next/headers";
 import { NextResponse } from "next/server";
 import type Stripe from "stripe";
-import { stripe } from "@/lib/stripe";
+import { getStripeClient } from "@/lib/stripe";
 import { createAdminClient } from "@/lib/supabase/admin";
 
 const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET;
@@ -67,6 +67,7 @@ export async function POST(request: Request) {
 
   let event: Stripe.Event;
   try {
+    const stripe = getStripeClient();
     event = stripe.webhooks.constructEvent(body, signature, webhookSecret);
   } catch (error) {
     return NextResponse.json({ error: (error as Error).message }, { status: 400 });

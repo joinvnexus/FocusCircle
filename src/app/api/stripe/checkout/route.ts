@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
-import { stripe } from "@/lib/stripe";
+import { getStripeClient } from "@/lib/stripe";
 
 function getBaseUrl() {
   return process.env.NEXT_PUBLIC_APP_URL || process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000";
@@ -19,6 +19,7 @@ export async function POST() {
   const { data: appUser } = await supabase.from("users").select("stripe_customer_id").eq("id", user.id).single();
 
   let customerId = appUser?.stripe_customer_id ?? null;
+  const stripe = getStripeClient();
   if (!customerId) {
     const customer = await stripe.customers.create({
       email: user.email ?? undefined,

@@ -12,7 +12,7 @@ async function ensureAdmin() {
   } = await supabase.auth.getUser();
 
   if (!user) {
-    return { error: "Unauthorized", user: null };
+    return { error: "Unauthorized", user: null, supabase };
   }
 
   const { data: profile } = await supabase.from("users").select("is_admin").eq("id", user.id).single();
