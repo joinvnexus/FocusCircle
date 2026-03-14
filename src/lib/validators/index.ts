@@ -1,13 +1,6 @@
 import { z } from "zod";
 
-const optionalUuid = z.union([z.string().uuid(), z.literal("")]).optional().transform((value) => {
-  if (!value) {
-    return undefined;
-  }
-
-  return value;
-});
-
+const optionalUuid = z.string().uuid().optional();
 const optionalDateString = z.union([z.string().min(1), z.literal("")]).optional().transform((value) => {
   if (!value) {
     return undefined;
@@ -43,13 +36,20 @@ export const avatarSchema = z.object({
 
 export const taskSchema = z.object({
   title: z.string().min(2),
-  description: z.string().max(600).optional(),
-  dueDate: optionalDateString,
+
+  description: z.string().max(600),
+
+  dueDate: z.string(),
+
   priority: z.enum(["low", "medium", "high"]),
-  status: z.enum(["todo", "in_progress", "completed"]).default("todo"),
-  circleId: z.preprocess((value) => (value === "personal" ? undefined : value), optionalUuid),
-  assignedTo: optionalUuid,
-  goalId: z.preprocess((value) => (value === "none" ? undefined : value), optionalUuid),
+
+  status: z.enum(["todo", "in_progress", "completed"]),
+
+  circleId: z.string(),
+
+  assignedTo: z.string(),
+
+  goalId: z.string(),
 });
 
 export const circleSchema = z.object({

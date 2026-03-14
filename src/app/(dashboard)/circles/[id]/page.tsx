@@ -71,7 +71,7 @@ export default async function CircleWorkspacePage({ params }: { params: Promise<
               <CardTitle>Tasks board</CardTitle>
             </CardHeader>
             <CardContent>
-              <KanbanBoard initialTasks={workspace.tasks} />
+            <KanbanBoard initialTasks={workspace.tasks} circles={workspace.members.map(m => ({id: m.circle_id, name: workspace.circle!.name}))} goalOptions={workspace.goals} />
             </CardContent>
           </Card>
 

@@ -5,7 +5,14 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
-import { Dialog, DialogContent, DialogTrigger } from '@/components/ui/dialog';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from '@/components/ui/dialog';
 import { Plus } from 'lucide-react';
 import { RealtimeRefresh } from '@/components/shared/realtime-refresh';
 import Link from 'next/link';
@@ -34,6 +41,10 @@ export default async function GoalsPage() {
               </Button>
             </DialogTrigger>
             <DialogContent className="max-w-2xl p-0">
+              <DialogHeader className="sr-only">
+                <DialogTitle>Create Goal</DialogTitle>
+                <DialogDescription>Add a new goal and link it to a circle.</DialogDescription>
+              </DialogHeader>
               <GoalForm circles={circles} />
             </DialogContent>
           </Dialog>
@@ -93,6 +104,10 @@ export default async function GoalsPage() {
                   </Button>
                 </DialogTrigger>
                 <DialogContent className="max-w-2xl p-0">
+                  <DialogHeader className="sr-only">
+                <DialogTitle>Create Goal</DialogTitle>
+                <DialogDescription>Add a new goal and link it to a circle.</DialogDescription>
+                  </DialogHeader>
                   <GoalForm circles={[]} />
                 </DialogContent>
               </Dialog>

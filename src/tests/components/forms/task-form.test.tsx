@@ -21,10 +21,10 @@ describe("TaskForm", () => {
     const circleId = "2f1c9e3b-4c7a-4d47-8f5e-2a0e6b9f4a2c";
     const goalId = "9a9df8ef-7df1-4df3-8b8d-3c0e0e9f4b0d";
     render(
-      <TaskForm
+      <TaskForm mode="create"
         circles={[{ id: circleId, name: "Circle One" }]}
         goalOptions={[{ id: goalId, title: "Goal One" }]}
-      />,
+      />
     );
 
     await userEvent.type(screen.getByLabelText("Title"), "Write tests");

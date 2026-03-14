@@ -3,17 +3,24 @@
 import { useMemo, useState, useTransition } from "react";
 import { DndContext, DragEndEvent, useDraggable, useDroppable } from "@dnd-kit/core";
 import { toast } from "sonner";
-import { Trash2 } from "lucide-react";
+import { Trash2, Edit3 } from "lucide-react";
+import { TaskEditDialog } from "@/components/forms/task-edit-dialog";
 import { deleteTaskAction, updateTaskStatusAction } from "@/app/actions/tasks";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { formatDate, formatStatusLabel, getPriorityColor } from "@/lib/utils";
-import type { Task, TaskStatus } from "@/types";
+import type { Task, TaskStatus, Goal } from "@/types";
 
 const columns: TaskStatus[] = ["todo", "in_progress", "completed"];
 
-export function KanbanBoard({ initialTasks }: { initialTasks: Task[] }) {
+interface KanbanBoardProps {
+  initialTasks: Task[];
+  circles?: Array<{ id: string; name: string }>;
+  goalOptions?: Goal[];
+}
+
+export function KanbanBoard({ initialTasks, circles = [], goalOptions = [] }: KanbanBoardProps) {
   const [tasks, setTasks] = useState(initialTasks);
   const [isPending, startTransition] = useTransition();
   const grouped = useMemo(
@@ -103,7 +110,23 @@ function KanbanColumn({
   );
 }
 
-function TaskCard({ task, onDelete, disabled }: { task: Task; onDelete: (taskId: string) => void; disabled: boolean }) {
+function TaskCard({ 
+  task, 
+  onDelete, 
+  onEdit, 
+  disabled, 
+  circles = [], 
+  goalOptions = [],
+  members = []
+}: { 
+  task: Task; 
+  onDelete: (taskId: string) => void; 
+  onEdit?: (task: Task) => void;
+  disabled: boolean;
+  circles?: Array<{ id: string; name: string }>;
+  goalOptions?: Array<{ id: string; title: string }>;
+  members?: Array<{ id: string; full_name: string }>;
+}) {
   const { attributes, listeners, setNodeRef, transform, isDragging } = useDraggable({ id: task.id });
   const style = transform ? { transform: `translate3d(${transform.x}px, ${transform.y}px, 0)` } : undefined;
 
@@ -120,9 +143,22 @@ function TaskCard({ task, onDelete, disabled }: { task: Task; onDelete: (taskId:
           <div className="font-medium">{task.title}</div>
           {task.description && <p className="text-sm text-muted-foreground">{task.description}</p>}
         </div>
-        <Button type="button" variant="ghost" size="icon" disabled={disabled} onClick={() => onDelete(task.id)}>
-          <Trash2 className="h-4 w-4" />
-        </Button>
+        <div className="flex gap-1">
+          <TaskEditDialog 
+            task={task} 
+            circles={circles}
+            goalOptions={goalOptions}
+          >
+            <Button type="button" variant="ghost" size="icon" disabled={disabled} className="h-8 w-8 p-0">
+              <Edit3 className="h-4 w-4" />
+              <span className="sr-only">Edit task</span>
+            </Button>
+          </TaskEditDialog>
+          <Button type="button" variant="ghost" size="icon" disabled={disabled} onClick={() => onDelete(task.id)}>
+            <Trash2 className="h-4 w-4" />
+            <span className="sr-only">Delete task</span>
+          </Button>
+        </div>
       </div>
       <div className="mt-3 flex flex-wrap items-center gap-2">
         <Badge className={getPriorityColor(task.priority)}>{task.priority}</Badge>

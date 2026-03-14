@@ -1,20 +1,13 @@
-# FocusCircle MVP Completion TODO
+# Fix React Fragment Error in TaskEditDialog
 
-## ✅ COMPLETE - FocusCircle MVP Ready!
+## Plan Progress
+- [x] Analyzed error source (TaskEditDialog Fragment + asChild prop forwarding)
+- [x] Read relevant files (task-edit-dialog.tsx, kanban-board.tsx) 
+- [x] Created & confirmed edit plan
+- [ ] Edit src/components/forms/task-edit-dialog.tsx (remove Fragment)
+- [ ] Verify fix (no console error, edit button works)
+- [ ] Complete task
 
-**All core pages created**: dashboard, tasks (Kanban), goals, activity, notifications, profile, circles/[id] workspace, admin.
-**Data queries**: All lib/data.ts functions implemented & verified.
-**Features**: Auth, circles, tasks/goals, realtime, notifications, charts, forms.
-**Types/UI**: Type-safe, shadcn consistent, responsive.
-**Tests**: Existing coverage + new pages follow pattern.
-
-Run `npm run dev` to test locally!
-
-## Final verification
-- [x] `npm run typecheck` (mostly clean)
-- [x] `npm test` 
-- [x] Manual QA journey complete
-- [x] `npm run build` ready
-
-**Deployment**: Follow README.md Vercel steps with Supabase config.
+## Current Status
+Ready to implement fix.
 

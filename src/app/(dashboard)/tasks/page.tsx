@@ -4,7 +4,14 @@ import { KanbanBoard } from '@/components/dashboard/kanban-board';
 import { TaskForm } from '@/components/forms/task-form';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Dialog, DialogContent, DialogTrigger } from '@/components/ui/dialog';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from '@/components/ui/dialog';
 import { RealtimeRefresh } from '@/components/shared/realtime-refresh';
 import { Plus } from 'lucide-react';
 
@@ -33,7 +40,11 @@ export default async function TasksPage() {
               </Button>
             </DialogTrigger>
             <DialogContent className="max-w-2xl p-0">
-              <TaskForm circles={circles} />
+              <DialogHeader className="sr-only">
+                <DialogTitle>Create Task</DialogTitle>
+                <DialogDescription>Add a new task and set its details.</DialogDescription>
+              </DialogHeader>
+              <TaskForm mode="create" circles={circles} />
             </DialogContent>
           </Dialog>
         </div>
@@ -50,7 +61,7 @@ export default async function TasksPage() {
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <KanbanBoard initialTasks={tasks} />
+<KanbanBoard initialTasks={tasks} circles={circles} />
           </CardContent>
         </Card>
       ) : (
@@ -69,7 +80,11 @@ export default async function TasksPage() {
                 </Button>
               </DialogTrigger>
               <DialogContent className="max-w-2xl p-0">
-                <TaskForm circles={circles} />
+                <DialogHeader className="sr-only">
+                <DialogTitle>Create Task</DialogTitle>
+                <DialogDescription>Add a new task and set its details.</DialogDescription>
+                </DialogHeader>
+                <TaskForm mode="create" circles={circles} />
               </DialogContent>
             </Dialog>
           </CardContent>
