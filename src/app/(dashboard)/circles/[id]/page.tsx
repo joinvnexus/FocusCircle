@@ -110,8 +110,12 @@ export default async function CircleWorkspacePage({ params }: { params: Promise<
               {workspace.members.map((member) => (
                 <div key={member.user_id} className="flex items-center justify-between gap-3 rounded-2xl bg-white/90 p-4 shadow-sm dark:bg-slate-900/70">
                   <div>
-                    <div className="font-medium">{member.users?.full_name ?? member.user_id}</div>
-                    <div className="text-sm text-muted-foreground">{member.users?.email}</div>
+                    <div className="font-medium">
+                      {member.users?.full_name || member.users?.email || "Invited member"}
+                    </div>
+                    <div className="text-sm text-muted-foreground">
+                      {member.users?.email || "Name will appear after they accept the invite."}
+                    </div>
                   </div>
                   <MemberRoleSelect circleId={workspace.circle!.id} memberUserId={member.user_id} currentRole={member.role} />
                 </div>

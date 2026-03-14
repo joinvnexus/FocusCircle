@@ -60,6 +60,8 @@ export function KanbanBoard({ initialTasks, circles = [], goalOptions = [] }: Ka
             id={column}
             title={formatStatusLabel(column)}
             tasks={grouped[column]}
+            circles={circles}
+            goalOptions={goalOptions}
             onDelete={(taskId) => {
               const previous = tasks;
               setTasks((prev) => prev.filter((task) => task.id !== taskId));
@@ -83,12 +85,16 @@ function KanbanColumn({
   id,
   title,
   tasks,
+  circles,
+  goalOptions,
   onDelete,
   isPending,
 }: {
   id: TaskStatus;
   title: string;
   tasks: Task[];
+  circles: Array<{ id: string; name: string }>;
+  goalOptions: Goal[];
   onDelete: (taskId: string) => void;
   isPending: boolean;
 }) {
@@ -102,7 +108,14 @@ function KanbanColumn({
       </CardHeader>
       <CardContent className="space-y-3">
         {tasks.map((task) => (
-          <TaskCard key={task.id} task={task} onDelete={onDelete} disabled={isPending} />
+          <TaskCard
+            key={task.id}
+            task={task}
+            onDelete={onDelete}
+            disabled={isPending}
+            circles={circles}
+            goalOptions={goalOptions}
+          />
         ))}
         {!tasks.length && <div className="rounded-xl border border-dashed p-6 text-center text-sm text-muted-foreground">Drop tasks here</div>}
       </CardContent>
@@ -149,12 +162,26 @@ function TaskCard({
             circles={circles}
             goalOptions={goalOptions}
           >
-            <Button type="button" variant="ghost" size="icon" disabled={disabled} className="h-8 w-8 p-0">
+            <Button
+              type="button"
+              variant="ghost"
+              size="icon"
+              disabled={disabled}
+              className="h-8 w-8 p-0"
+              onPointerDown={(event) => event.stopPropagation()}
+            >
               <Edit3 className="h-4 w-4" />
               <span className="sr-only">Edit task</span>
             </Button>
           </TaskEditDialog>
-          <Button type="button" variant="ghost" size="icon" disabled={disabled} onClick={() => onDelete(task.id)}>
+          <Button
+            type="button"
+            variant="ghost"
+            size="icon"
+            disabled={disabled}
+            onPointerDown={(event) => event.stopPropagation()}
+            onClick={() => onDelete(task.id)}
+          >
             <Trash2 className="h-4 w-4" />
             <span className="sr-only">Delete task</span>
           </Button>
