@@ -4,17 +4,38 @@ import { cn } from "@/lib/utils"
 
 const Card = React.forwardRef<
   HTMLDivElement,
-  React.HTMLAttributes<HTMLDivElement>
->(({ className, ...props }, ref) => (
-  <div
-    ref={ref}
-    className={cn(
-      "rounded-lg border bg-card text-card-foreground shadow-sm",
-      className
-    )}
-    {...props}
-  />
-))
+  React.HTMLAttributes<HTMLDivElement> & {
+    variant?: 'default' | 'elevated' | 'outline' | 'ghost';
+    radius?: 'sm' | 'md' | 'lg' | 'xl';
+  }
+>(({ className, variant = 'default', radius = 'lg', ...props }, ref) => {
+  const variants = {
+    default: 'bg-[var(--color-bg-surface)] border-[var(--color-border-primary)]',
+    elevated: 'bg-[var(--color-bg-surface)] border-[var(--color-border-primary)] shadow-[var(--shadow-md)] hover:shadow-[var(--shadow-lg)] transition-shadow',
+    outline: 'bg-transparent border-[var(--color-border-primary)]',
+    ghost: 'bg-transparent border-none',
+  };
+  
+  const radii = {
+    sm: 'rounded-[var(--radius-sm)]',
+    md: 'rounded-[var(--radius-md)]',
+    lg: 'rounded-[var(--radius-lg)]',
+    xl: 'rounded-[var(--radius-xl)]',
+  };
+  
+  return (
+    <div
+      ref={ref}
+      className={cn(
+        'border',
+        variants[variant],
+        radii[radius],
+        className
+      )}
+      {...props}
+    />
+  );
+})
 Card.displayName = "Card"
 
 const CardHeader = React.forwardRef<
