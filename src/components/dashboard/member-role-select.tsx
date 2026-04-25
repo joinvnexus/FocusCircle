@@ -3,6 +3,7 @@
 import { useTransition } from "react";
 import { toast } from "sonner";
 import { updateCircleMemberRoleAction } from "@/app/actions/circles";
+import { useAuth } from "@/contexts/AuthContext";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import type { CircleRole } from "@/types";
 
@@ -16,6 +17,8 @@ export function MemberRoleSelect({
   currentRole: CircleRole;
 }) {
   const [isPending, startTransition] = useTransition();
+  const { appUser } = useAuth();
+  const canManageRoles = appUser?.plan === "pro";
 
   return (
     <Select
@@ -30,9 +33,9 @@ export function MemberRoleSelect({
           toast.success("Role updated");
         });
       }}
-      disabled={isPending}
+      disabled={isPending || !canManageRoles}
     >
-      <SelectTrigger className="w-28">
+      <SelectTrigger className="w-28" title={!canManageRoles ? "Upgrade to Pro to manage member roles." : undefined}>
         <SelectValue />
       </SelectTrigger>
       <SelectContent>

@@ -3,6 +3,7 @@ import { getProfilePageData } from "@/lib/data";
 import { requireUser } from "@/lib/auth";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { BillingPortalButton } from "@/components/settings/billing-portal-button";
+import { CheckoutButton } from "@/components/marketing/checkout-button";
 
 export default async function ProfilePage() {
   const user = await requireUser();
@@ -32,7 +33,7 @@ export default async function ProfilePage() {
                 : "Up to 3 circles, basic analytics"}
             </div>
           </div>
-          <BillingPortalButton />
+          {profile.plan === "pro" ? <BillingPortalButton /> : <CheckoutButton label="Upgrade to Pro" />}
         </CardContent>
       </Card>
       <ProfileForm profile={profile} />

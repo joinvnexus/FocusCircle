@@ -2,6 +2,7 @@
 
 import { useState } from 'react'
 import Link from 'next/link'
+import { useSearchParams } from 'next/navigation'
 import { useAuth } from '@/contexts/AuthContext'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -14,6 +15,7 @@ export default function LoginPage() {
   const [password, setPassword] = useState('')
   const [loading, setLoading] = useState(false)
   const { signIn } = useAuth()
+  const searchParams = useSearchParams()
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -26,7 +28,9 @@ export default function LoginPage() {
       setLoading(false)
     } else {
       toast.success('Welcome back!')
-      window.location.assign('/dashboard')
+      const next = searchParams?.get('next')
+      const safeNext = next && next.startsWith('/') ? next : '/dashboard'
+      window.location.assign(safeNext)
     }
   }
 

@@ -25,12 +25,15 @@ npm install
 ```
 2. Configure environment variables in `.env`:
 - `NEXT_PUBLIC_SUPABASE_URL`
-- `NEXT_PUBLIC_SUPABASE_ANON_KEY`
+- `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` (or legacy `NEXT_PUBLIC_SUPABASE_ANON_KEY`)
 - `SUPABASE_SERVICE_ROLE_KEY`
 - `RESEND_API_KEY`
 - `RESEND_FROM_EMAIL`
 - `NEXT_PUBLIC_APP_URL`
 - `CRON_SECRET`
+- `STRIPE_SECRET_KEY`
+- `STRIPE_WEBHOOK_SECRET`
+- `STRIPE_PRO_PRICE_ID`
 3. Run the dev server:
 ```bash
 npm run dev
@@ -48,6 +51,12 @@ npm run dev
 - Email delivery uses Resend.
 - Users can toggle email preferences in Profile Settings.
 - Deadline reminders are sent by calling `/api/notifications/deadlines` with `Authorization: Bearer <CRON_SECRET>`.
+
+## Billing (Stripe)
+- Pro is billed via Stripe subscriptions (`$9 per user / month`).
+- Set `STRIPE_PRO_PRICE_ID` to the Stripe Price ID for the Pro monthly plan.
+- Configure a Stripe webhook endpoint to `POST /api/stripe/webhook` and set `STRIPE_WEBHOOK_SECRET`.
+- The webhook listens for `customer.subscription.*` events and updates `public.subscriptions` + the user plan/limits.
 
 ## Scripts
 - `npm run dev` — local dev server
@@ -67,13 +76,16 @@ Build settings:
 
 Set Production env vars in Vercel:
 - `NEXT_PUBLIC_SUPABASE_URL`
-- `NEXT_PUBLIC_SUPABASE_ANON_KEY`
+- `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` (or legacy `NEXT_PUBLIC_SUPABASE_ANON_KEY`)
 - `SUPABASE_SERVICE_ROLE_KEY`
 - `RESEND_API_KEY`
 - `RESEND_FROM_EMAIL`
 - `NEXT_PUBLIC_APP_URL`
 - `CRON_SECRET`
+- `STRIPE_SECRET_KEY`
+- `STRIPE_WEBHOOK_SECRET`
+- `STRIPE_PRO_PRICE_ID`
 
 ## Troubleshooting
-- Build fails with missing Supabase env: ensure `NEXT_PUBLIC_SUPABASE_URL` and `NEXT_PUBLIC_SUPABASE_ANON_KEY` are set in the build environment.
+- Build fails with missing Supabase env: ensure `NEXT_PUBLIC_SUPABASE_URL` and `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` (or `NEXT_PUBLIC_SUPABASE_ANON_KEY`) are set in the build environment.
 - Middleware errors on Vercel: check edge logs and verify env values exist in Production.

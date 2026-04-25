@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import { useRouter, usePathname } from 'next/navigation'
+import { useRouter, usePathname, useSearchParams } from 'next/navigation'
 import Link from 'next/link'
 import { useAuth } from '@/contexts/AuthContext'
 import { cn, getInitials } from '@/lib/utils'
@@ -21,6 +21,7 @@ import {
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { Button } from '@/components/ui/button'
 import { ThemeToggle } from '@/components/shared/theme-toggle'
+import { toast } from 'sonner'
 
 export const dynamic = 'force-dynamic'
 
@@ -29,9 +30,10 @@ export default function DashboardLayout({
 }: {
   children: React.ReactNode
 }) {
-  const { user, appUser, loading, signOut } = useAuth()
+  const { user, appUser, loading, signOut, refreshSession } = useAuth()
   const router = useRouter()
   const pathname = usePathname()
+  const searchParams = useSearchParams()
   const [sidebarOpen, setSidebarOpen] = useState(false)
 
   const navigation = [
@@ -49,6 +51,23 @@ export default function DashboardLayout({
       router.push('/login')
     }
   }, [loading, router, user])
+
+  useEffect(() => {
+    const checkout = searchParams.get('checkout')
+    if (!checkout) return
+
+    if (checkout === 'success') {
+      toast.success('Checkout complete. Activating Pro…')
+    } else if (checkout === 'cancel') {
+      toast.message('Checkout canceled.')
+    }
+
+    const url = new URL(window.location.href)
+    url.searchParams.delete('checkout')
+    window.history.replaceState(null, '', url.toString())
+
+    refreshSession()
+  }, [refreshSession, searchParams])
 
   if (loading) {
     return (

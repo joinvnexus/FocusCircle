@@ -1,15 +1,23 @@
 import { Bell, CalendarClock, CheckCircle2, TrendingUp, Users } from "lucide-react";
-import { getDashboardSnapshot } from "@/lib/data";
+import Link from "next/link";
+import { createClient } from "@/lib/supabase/server";
+import { getAdvancedAnalytics, getDashboardSnapshot } from "@/lib/data";
 import { requireUser } from "@/lib/auth";
 import { formatDate, formatRelativeTime, formatStatusLabel, getPriorityColor, getStatusColor } from "@/lib/utils";
-import { GoalProgressChart, WeeklyTasksChart } from "@/components/dashboard/productivity-charts";
+import { GoalProgressChart, TaskPriorityChart, WeeklyTasksChart } from "@/components/dashboard/productivity-charts";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { RealtimeRefresh } from "@/components/shared/realtime-refresh";
 
 export default async function DashboardPage() {
   const user = await requireUser();
+  const supabase = await createClient();
+  const { data: profile } = await supabase.from("users").select("plan").eq("id", user.id).single();
+  const plan = (profile?.plan ?? "free") as "free" | "pro";
+
   const snapshot = await getDashboardSnapshot(user.id);
+  const advancedAnalytics = plan === "pro" ? await getAdvancedAnalytics(user.id) : null;
   const completedThisWeek = snapshot.weeklyCompleted.reduce((sum, item) => sum + item.completed, 0);
 
   return (
@@ -58,6 +66,38 @@ export default async function DashboardPage() {
           </CardContent>
         </Card>
       </div>
+
+      <Card className="overflow-hidden border-0 bg-white/80 shadow-sm dark:bg-slate-900/60">
+        <div className="h-1 w-full bg-gradient-to-r from-cyan-400 via-indigo-400 to-primary" />
+        <CardHeader>
+          <CardTitle>Advanced analytics</CardTitle>
+        </CardHeader>
+        <CardContent>
+          {plan === "pro" && advancedAnalytics ? (
+            <div className="grid gap-6 lg:grid-cols-[0.35fr_0.65fr] lg:items-center">
+              <div className="rounded-2xl border bg-white/70 p-5 shadow-sm dark:bg-slate-900/50">
+                <div className="text-sm text-muted-foreground">Completion rate (last 30 days)</div>
+                <div className="mt-2 text-4xl font-semibold">{advancedAnalytics.completionRate}%</div>
+                <div className="mt-1 text-xs text-muted-foreground">Based on tasks updated recently.</div>
+              </div>
+              <div className="rounded-2xl border bg-white/70 p-5 shadow-sm dark:bg-slate-900/50">
+                <div className="mb-3 text-sm font-medium">Priority mix</div>
+                <TaskPriorityChart data={advancedAnalytics.byPriority} />
+              </div>
+            </div>
+          ) : (
+            <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+              <div>
+                <div className="font-medium">Unlock Pro insights</div>
+                <div className="text-sm text-muted-foreground">See priority mix, completion signals, and deeper trends.</div>
+              </div>
+              <Button asChild>
+                <Link href="/pricing">Upgrade to Pro</Link>
+              </Button>
+            </div>
+          )}
+        </CardContent>
+      </Card>
 
       <div className="grid gap-6 lg:grid-cols-2">
         <Card className="border-0 bg-white/80 shadow-sm dark:bg-slate-900/60">

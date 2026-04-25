@@ -44,7 +44,7 @@ export function TaskForm({
       description: "",
       priority: "medium",
       status: "todo",
-       dueDate: "",
+      dueDate: "",
       circleId: "personal",
       assignedTo: "unassigned",
       goalId: "none",
@@ -72,22 +72,9 @@ export function TaskForm({
 
   const onSubmit = form.handleSubmit((values) => {
     startTransition(async () => {
-      const payload = {
-        ...values,
-        circleId: values.circleId === "personal" ? undefined : values.circleId,
-        goalId: values.goalId === "none" ? undefined : values.goalId,
-        assignedTo:
-          values.assignedTo === "unassigned"
-            ? undefined
-            : values.assignedTo === "self"
-              ? taskId
-              : values.assignedTo,
-        dueDate: values.dueDate || undefined,
-      };
-
       const result = mode === "create"
-        ? await createTaskAction(payload)
-        : await updateTaskAction(taskId!, payload);
+        ? await createTaskAction(values)
+        : await updateTaskAction(taskId!, values);
 
       if (result.error) {
         toast.error(result.error);
@@ -167,8 +154,6 @@ export function TaskForm({
             onChange={(value) => form.setValue("assignedTo", value)}
           >
             <SelectItem value="unassigned">Unassigned</SelectItem>
-            {/* Note: Would need member list prop for real assignee select */}
-            <SelectItem value="self">Self</SelectItem>
           </FieldSelect>
           <div className="md:col-span-2 flex justify-end gap-2">
             <Button type="button" variant="outline" onClick={() => form.reset()} disabled={isPending}>

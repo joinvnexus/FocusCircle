@@ -1,6 +1,37 @@
 import { z } from "zod";
 
-const optionalUuid = z.string().uuid().optional();
+const optionalCircleId = z
+  .union([z.string().uuid(), z.literal(""), z.literal("personal")])
+  .optional()
+  .transform((value) => {
+    if (!value || value === "personal") {
+      return undefined;
+    }
+
+    return value;
+  });
+
+const optionalAssigneeId = z
+  .union([z.string().uuid(), z.literal(""), z.literal("unassigned")])
+  .optional()
+  .transform((value) => {
+    if (!value || value === "unassigned") {
+      return undefined;
+    }
+
+    return value;
+  });
+
+const optionalGoalId = z
+  .union([z.string().uuid(), z.literal(""), z.literal("none")])
+  .optional()
+  .transform((value) => {
+    if (!value || value === "none") {
+      return undefined;
+    }
+
+    return value;
+  });
 const optionalDateString = z.union([z.string().min(1), z.literal("")]).optional().transform((value) => {
   if (!value) {
     return undefined;
@@ -39,17 +70,17 @@ export const taskSchema = z.object({
 
   description: z.string().max(600),
 
-  dueDate: z.string(),
+  dueDate: optionalDateString,
 
   priority: z.enum(["low", "medium", "high"]),
 
   status: z.enum(["todo", "in_progress", "completed"]),
 
-  circleId: z.string(),
+  circleId: optionalCircleId,
 
-  assignedTo: z.string(),
+  assignedTo: optionalAssigneeId,
 
-  goalId: z.string(),
+  goalId: optionalGoalId,
 });
 
 export const circleSchema = z.object({

@@ -16,10 +16,29 @@ export async function POST() {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  const { data: appUser } = await supabase.from("users").select("stripe_customer_id").eq("id", user.id).single();
+  const [{ data: appUser }, { count: activeSubscriptionCount }] = await Promise.all([
+    supabase.from("users").select("stripe_customer_id, plan").eq("id", user.id).single(),
+    supabase
+      .from("subscriptions")
+      .select("id", { count: "exact", head: true })
+      .eq("user_id", user.id)
+      .in("status", ["active", "trialing"]),
+  ]);
 
   let customerId = appUser?.stripe_customer_id ?? null;
   const stripe = getStripeClient();
+
+  const hasActiveSubscription = (activeSubscriptionCount ?? 0) > 0;
+  if (hasActiveSubscription && customerId) {
+    const baseUrl = getBaseUrl();
+    const portalSession = await stripe.billingPortal.sessions.create({
+      customer: customerId,
+      return_url: `${baseUrl}/profile`,
+    });
+
+    return NextResponse.json({ url: portalSession.url });
+  }
+
   if (!customerId) {
     const customer = await stripe.customers.create({
       email: user.email ?? undefined,
@@ -39,6 +58,7 @@ export async function POST() {
     mode: "subscription",
     customer: customerId ?? undefined,
     line_items: [{ price: priceId, quantity: 1 }],
+    client_reference_id: user.id,
     success_url: `${baseUrl}/dashboard?checkout=success`,
     cancel_url: `${baseUrl}/pricing?checkout=cancel`,
     allow_promotion_codes: true,

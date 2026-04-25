@@ -98,6 +98,19 @@ export async function joinCircleAction(inviteCode: string) {
 
 export async function updateCircleMemberRoleAction(circleId: string, userId: string, role: "owner" | "admin" | "member") {
   const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  if (!user) {
+    return { error: "Unauthorized" };
+  }
+
+  const { data: profile } = await supabase.from("users").select("plan").eq("id", user.id).single();
+  if (profile?.plan !== "pro") {
+    return { error: "Upgrade to Pro to manage member roles." };
+  }
+
   const { error } = await supabase.from("circle_members").update({ role }).eq("circle_id", circleId).eq("user_id", userId);
 
   if (error) {

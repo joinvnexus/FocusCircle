@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { MarketingShell } from "@/components/marketing/marketing-shell";
 import { CheckoutButton } from "@/components/marketing/checkout-button";
+import { CheckoutStatusToast } from "@/components/marketing/checkout-status-toast";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
@@ -22,6 +23,7 @@ const tiers = [
 export default function PricingPage() {
   return (
     <MarketingShell>
+      <CheckoutStatusToast />
       <main className="mx-auto max-w-6xl px-4 py-16 sm:px-6 lg:px-8">
         <div className="text-center">
           <div className="text-sm font-medium uppercase tracking-[0.22em] text-primary">Pricing</div>

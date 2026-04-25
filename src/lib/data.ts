@@ -228,6 +228,55 @@ export async function getProfilePageData(userId: string) {
   return data as AppUser | null;
 }
 
+export async function getAdvancedAnalytics(userId: string) {
+  const supabase = await createClient();
+  const start = subDays(startOfDay(new Date()), 29).toISOString();
+
+  const { data: tasks } = await supabase
+    .from("tasks")
+    .select("priority, status, updated_at")
+    .or(`assigned_to.eq.${userId},created_by.eq.${userId}`)
+    .gte("updated_at", start);
+
+  const priorityCounts = new Map<string, number>([
+    ["low", 0],
+    ["medium", 0],
+    ["high", 0],
+  ]);
+
+  const statusCounts = new Map<string, number>([
+    ["todo", 0],
+    ["in_progress", 0],
+    ["completed", 0],
+  ]);
+
+  for (const task of tasks ?? []) {
+    if (task.priority) {
+      priorityCounts.set(task.priority, (priorityCounts.get(task.priority) ?? 0) + 1);
+    }
+    if (task.status) {
+      statusCounts.set(task.status, (statusCounts.get(task.status) ?? 0) + 1);
+    }
+  }
+
+  const total = tasks?.length ?? 0;
+  const completed = statusCounts.get("completed") ?? 0;
+  const completionRate = total > 0 ? Math.round((completed / total) * 100) : 0;
+
+  return {
+    completionRate,
+    byPriority: ["low", "medium", "high"].map((priority) => ({
+      priority,
+      count: priorityCounts.get(priority) ?? 0,
+    })),
+    byStatus: ["todo", "in_progress", "completed"].map((status) => ({
+      status,
+      count: statusCounts.get(status) ?? 0,
+    })),
+    windowStart: start,
+  };
+}
+
 async function getWeeklyCompletedTasks(userId: string) {
   const supabase = await createClient();
   const start = subDays(startOfDay(new Date()), 6).toISOString();

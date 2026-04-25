@@ -79,7 +79,7 @@
 - Integration tests: auth flow, task lifecycle, circle join flow, profile updates.
 
 ## Deployment Checklist
-- Configure `NEXT_PUBLIC_SUPABASE_URL` and `NEXT_PUBLIC_SUPABASE_ANON_KEY`.
+- Configure `NEXT_PUBLIC_SUPABASE_URL` and `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` (or legacy `NEXT_PUBLIC_SUPABASE_ANON_KEY`).
 - Configure `RESEND_API_KEY`, `RESEND_FROM_EMAIL`, and `NEXT_PUBLIC_APP_URL` for email notifications.
 - Configure `CRON_SECRET` and schedule `/api/notifications/deadlines` to send deadline emails.
 - Apply `supabase/schema.sql`.

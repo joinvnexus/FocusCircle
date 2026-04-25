@@ -33,3 +33,24 @@ export function GoalProgressChart({ data }: { data: { name: string; progress: nu
     </div>
   );
 }
+
+export function TaskPriorityChart({ data }: { data: { priority: string; count: number }[] }) {
+  return (
+    <div className="h-64">
+      <ResponsiveContainer width="100%" height="100%">
+        <BarChart data={data}>
+          <CartesianGrid strokeDasharray="3 3" vertical={false} opacity={0.25} />
+          <XAxis
+            dataKey="priority"
+            axisLine={false}
+            tickLine={false}
+            tickFormatter={(value) => String(value).replace("_", " ")}
+          />
+          <YAxis axisLine={false} tickLine={false} allowDecimals={false} />
+          <Tooltip />
+          <Bar dataKey="count" radius={[10, 10, 0, 0]} fill="var(--chart-3)" />
+        </BarChart>
+      </ResponsiveContainer>
+    </div>
+  );
+}
