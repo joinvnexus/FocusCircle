@@ -2,6 +2,24 @@ import { type NextRequest, NextResponse } from "next/server";
 
 export async function middleware(request: NextRequest) {
   try {
+    const pathname = request.nextUrl.pathname;
+    const isAuthPage =
+      pathname.startsWith("/login") ||
+      pathname.startsWith("/signup");
+    const isProtected =
+      pathname.startsWith("/dashboard") ||
+      pathname.startsWith("/admin") ||
+      pathname.startsWith("/tasks") ||
+      pathname.startsWith("/circles") ||
+      pathname.startsWith("/goals") ||
+      pathname.startsWith("/activity") ||
+      pathname.startsWith("/notifications") ||
+      pathname.startsWith("/profile");
+
+    if (!isAuthPage && !isProtected) {
+      return NextResponse.next();
+    }
+
     const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
     const anonKey =
       process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY ??
@@ -36,19 +54,6 @@ export async function middleware(request: NextRequest) {
       data: { user },
     } = await supabase.auth.getUser();
 
-    const isAuthPage =
-      request.nextUrl.pathname.startsWith("/login") ||
-      request.nextUrl.pathname.startsWith("/signup");
-    const isProtected =
-      request.nextUrl.pathname.startsWith("/dashboard") ||
-      request.nextUrl.pathname.startsWith("/admin") ||
-      request.nextUrl.pathname.startsWith("/tasks") ||
-      request.nextUrl.pathname.startsWith("/circles") ||
-      request.nextUrl.pathname.startsWith("/goals") ||
-      request.nextUrl.pathname.startsWith("/activity") ||
-      request.nextUrl.pathname.startsWith("/notifications") ||
-      request.nextUrl.pathname.startsWith("/profile");
-
     if (!user && isProtected) {
       const redirectUrl = request.nextUrl.clone();
       redirectUrl.pathname = "/login";
@@ -68,5 +73,16 @@ export async function middleware(request: NextRequest) {
 }
 
 export const config = {
-  matcher: ["/((?!_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)"],
+  matcher: [
+    "/dashboard/:path*",
+    "/admin/:path*",
+    "/tasks/:path*",
+    "/circles/:path*",
+    "/goals/:path*",
+    "/activity/:path*",
+    "/notifications/:path*",
+    "/profile/:path*",
+    "/login",
+    "/signup",
+  ],
 };
