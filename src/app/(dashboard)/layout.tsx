@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import { useRouter, usePathname, useSearchParams } from 'next/navigation'
+import { useRouter, usePathname } from 'next/navigation'
 import Link from 'next/link'
 import { useAuth } from '@/contexts/AuthContext'
 import { cn, getInitials } from '@/lib/utils'
@@ -33,7 +33,6 @@ export default function DashboardLayout({
   const { user, appUser, loading, signOut, refreshSession } = useAuth()
   const router = useRouter()
   const pathname = usePathname()
-  const searchParams = useSearchParams()
   const [sidebarOpen, setSidebarOpen] = useState(false)
 
   const navigation = [
@@ -53,7 +52,7 @@ export default function DashboardLayout({
   }, [loading, router, user])
 
   useEffect(() => {
-    const checkout = searchParams.get('checkout')
+    const checkout = new URLSearchParams(window.location.search).get('checkout')
     if (!checkout) return
 
     if (checkout === 'success') {
@@ -66,8 +65,8 @@ export default function DashboardLayout({
     url.searchParams.delete('checkout')
     window.history.replaceState(null, '', url.toString())
 
-    refreshSession()
-  }, [refreshSession, searchParams])
+    void refreshSession()
+  }, [pathname, refreshSession])
 
   if (loading) {
     return (
