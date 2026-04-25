@@ -8,7 +8,7 @@ const DEDUPE_WINDOW_HOURS = 24;
 function requireCronAuth(request: Request) {
   const secret = process.env.CRON_SECRET;
   if (!secret) {
-    return null;
+    return NextResponse.json({ error: "Server misconfigured" }, { status: 500 });
   }
   const header = request.headers.get("authorization") || "";
   if (header !== `Bearer ${secret}`) {

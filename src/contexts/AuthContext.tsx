@@ -1,6 +1,6 @@
 'use client'
 
-import { createContext, useContext, useEffect, useMemo, useState, ReactNode } from 'react'
+import { createContext, useCallback, useContext, useEffect, useMemo, useState, ReactNode } from 'react'
 import { User, Session } from '@supabase/supabase-js'
 import { createClient } from '@/lib/supabase/client'
 import { AppUser } from '@/types'
@@ -35,7 +35,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   }, [])
 
-  const refreshSession = async () => {
+  const refreshSession = useCallback(async () => {
     if (!supabase) {
       setSession(null)
       setUser(null)
@@ -63,24 +63,23 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
 
     setLoading(false)
-  }
+  }, [supabase])
 
   useEffect(() => {
     if (!supabase) {
-      setLoading(false)
       return
     }
 
-    refreshSession()
+    queueMicrotask(() => {
+      void refreshSession()
+    })
 
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
-      setSession(session)
-      setUser(session?.user ?? null)
-      setAppUser(null)
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(() => {
+      void refreshSession()
     })
 
     return () => subscription.unsubscribe()
-  }, [supabase])
+  }, [refreshSession, supabase])
 
   const signIn = async (email: string, password: string) => {
     if (!supabase) {
@@ -94,16 +93,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     if (!supabase) {
       return { error: new Error('Supabase client is not configured') }
     }
-    const { data, error } = await supabase.auth.signUp({ email, password })
-    
-    if (!error && data.user) {
-      await supabase.from('users').insert({
-        id: data.user.id,
-        email,
-        full_name: fullName
-      })
-    }
-    
+
+    const { error } = await supabase.auth.signUp({
+      email,
+      password,
+      options: {
+        data: {
+          full_name: fullName,
+        },
+      },
+    })
+
     return { error }
   }
 
@@ -118,7 +118,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }
 
   return (
-    <AuthContext.Provider value={{ user, appUser, session, loading, signIn, signUp, signOut, refreshSession }}>
+    <AuthContext.Provider value={{ user, appUser, session, loading: supabase ? loading : false, signIn, signUp, signOut, refreshSession }}>
       {children}
     </AuthContext.Provider>
   )

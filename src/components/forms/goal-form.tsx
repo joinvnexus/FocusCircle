@@ -2,7 +2,7 @@
 
 import { useTransition } from "react";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useForm } from "react-hook-form";
+import { useForm, useWatch } from "react-hook-form";
 import { z } from "zod";
 import { toast } from "sonner";
 import { createGoalAction, updateGoalProgressAction } from "@/app/actions/goals";
@@ -29,6 +29,7 @@ export function GoalForm({ circles }: { circles: Array<{ id: string; name: strin
       completionStatus: false,
     },
   });
+  const circleId = useWatch({ control: form.control, name: "circleId" });
 
   return (
     <Card>
@@ -60,7 +61,7 @@ export function GoalForm({ circles }: { circles: Array<{ id: string; name: strin
           </div>
           <div className="space-y-2">
             <Label>Circle</Label>
-            <Select value={form.watch("circleId")} onValueChange={(value) => form.setValue("circleId", value)}>
+            <Select value={circleId} onValueChange={(value) => form.setValue("circleId", value)}>
               <SelectTrigger>
                 <SelectValue placeholder="Select circle" />
               </SelectTrigger>

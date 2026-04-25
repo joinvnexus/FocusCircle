@@ -67,7 +67,7 @@ export async function createCommentAction(payload: unknown) {
         Array.from(recipients).map((recipientId) =>
           createNotificationWithEmail(supabase, {
             userId: recipientId,
-            type: "comment_added",
+            type: "comment",
             title: "New goal comment",
             message: `A comment was added to "${goal.title}".`,
             data: { goalId: parsed.data.targetId },
@@ -101,7 +101,7 @@ export async function createCommentAction(payload: unknown) {
         Array.from(recipients).map((recipientId) =>
           createNotificationWithEmail(supabase, {
             userId: recipientId,
-            type: "comment_added",
+            type: "comment",
             title: "New task comment",
             message: `A comment was added to "${task.title}".`,
             data: { taskId: parsed.data.targetId },

@@ -126,19 +126,15 @@ function KanbanColumn({
 function TaskCard({ 
   task, 
   onDelete, 
-  onEdit, 
   disabled, 
   circles = [], 
   goalOptions = [],
-  members = []
 }: { 
   task: Task; 
   onDelete: (taskId: string) => void; 
-  onEdit?: (task: Task) => void;
   disabled: boolean;
   circles?: Array<{ id: string; name: string }>;
   goalOptions?: Array<{ id: string; title: string }>;
-  members?: Array<{ id: string; full_name: string }>;
 }) {
   const { attributes, listeners, setNodeRef, transform, isDragging } = useDraggable({ id: task.id });
   const style = transform ? { transform: `translate3d(${transform.x}px, ${transform.y}px, 0)` } : undefined;

@@ -2,7 +2,7 @@
 
 import { useEffect, useTransition } from "react";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useForm } from "react-hook-form";
+import { useForm, useWatch } from "react-hook-form";
 import { z } from "zod";
 import { toast } from "sonner";
 import { createTaskAction, updateTaskAction } from "@/app/actions/tasks";
@@ -15,9 +15,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { taskSchema } from "@/lib/validators";
 import type { Task, TaskPriority, TaskStatus } from "@/types";
 
-const formSchema = taskSchema;
-
-type TaskFormValues = z.infer<typeof taskSchema>;
+type TaskFormValues = z.input<typeof taskSchema>;
 
 interface TaskFormProps {
   mode: "create" | "edit";
@@ -37,7 +35,7 @@ export function TaskForm({
   onSuccess,
 }: TaskFormProps) {
   const [isPending, startTransition] = useTransition();
-  const form = useForm<z.infer<typeof taskSchema>>({
+  const form = useForm<TaskFormValues>({
     resolver: zodResolver(taskSchema),
     defaultValues: {
       title: "",
@@ -48,7 +46,7 @@ export function TaskForm({
       circleId: "personal",
       assignedTo: "unassigned",
       goalId: "none",
-    } as z.infer<typeof taskSchema>,
+    },
   });
 
   // Prefill for edit mode
@@ -67,8 +65,11 @@ export function TaskForm({
     }
   }, [mode, initialTask, form]);
 
-  const circleValue = form.watch("circleId") || "personal";
-  const goalValue = form.watch("goalId") || "none";
+  const circleValue = useWatch({ control: form.control, name: "circleId" }) || "personal";
+  const goalValue = useWatch({ control: form.control, name: "goalId" }) || "none";
+  const priorityValue = useWatch({ control: form.control, name: "priority" }) || "medium";
+  const statusValue = useWatch({ control: form.control, name: "status" }) || "todo";
+  const assignedToValue = useWatch({ control: form.control, name: "assignedTo" }) || "unassigned";
 
   const onSubmit = form.handleSubmit((values) => {
     startTransition(async () => {
@@ -114,12 +115,12 @@ export function TaskForm({
             <Label htmlFor="description">Description</Label>
             <Textarea id="description" {...form.register("description")} placeholder="Outline the work, blockers, or owner context." />
           </div>
-          <FieldSelect label="Priority" value={form.watch("priority") || "medium"} onChange={(value) => form.setValue("priority", value as TaskPriority)}>
+          <FieldSelect label="Priority" value={priorityValue} onChange={(value) => form.setValue("priority", value as TaskPriority)}>
             <SelectItem value="low">Low</SelectItem>
             <SelectItem value="medium">Medium</SelectItem>
             <SelectItem value="high">High</SelectItem>
           </FieldSelect>
-          <FieldSelect label="Status" value={form.watch("status") || "todo"} onChange={(value) => form.setValue("status", value as TaskStatus)}>
+          <FieldSelect label="Status" value={statusValue} onChange={(value) => form.setValue("status", value as TaskStatus)}>
             <SelectItem value="todo">Todo</SelectItem>
             <SelectItem value="in_progress">In Progress</SelectItem>
             <SelectItem value="completed">Completed</SelectItem>
@@ -150,7 +151,7 @@ export function TaskForm({
           </FieldSelect>
           <FieldSelect
             label="Assigned to"
-            value={form.watch("assignedTo") || "unassigned"}
+            value={assignedToValue}
             onChange={(value) => form.setValue("assignedTo", value)}
           >
             <SelectItem value="unassigned">Unassigned</SelectItem>

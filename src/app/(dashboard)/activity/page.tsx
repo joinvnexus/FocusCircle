@@ -1,6 +1,6 @@
 import { getActivityPageData } from '@/lib/data';
 import { requireUser } from '@/lib/auth';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { RealtimeRefresh } from '@/components/shared/realtime-refresh';
 import { formatStatusLabel } from '@/lib/utils';
