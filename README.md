@@ -41,11 +41,20 @@ npm run dev
 
 ## Database & Supabase
 - Apply the schema in `supabase/schema.sql`
+- Demo data is available in `supabase/seed.sql`
 - Enable RLS policies in Supabase
 - Create a public Storage bucket named `avatars`
 - Configure Supabase Auth redirect URLs for:
   - `/login`
   - `/reset-password`
+
+## Demo Seed
+Run `supabase/seed.sql` in Supabase Dashboard -> SQL Editor after migrations/schema are applied.
+
+Demo logins:
+- `owner@focuscircle.test` / `Password123!`
+- `admin@focuscircle.test` / `Password123!`
+- `member@focuscircle.test` / `Password123!`
 
 ## Email Notifications
 - Email delivery uses Resend.

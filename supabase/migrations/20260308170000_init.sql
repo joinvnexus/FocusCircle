@@ -1,7 +1,7 @@
 -- FocusCircle initial schema migration
 -- Generated from supabase/schema.sql for use with `supabase db push`
 
-CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
+CREATE EXTENSION IF NOT EXISTS "pgcrypto";
 
 CREATE TABLE IF NOT EXISTS public.users (
   id UUID PRIMARY KEY REFERENCES auth.users(id) ON DELETE CASCADE,
@@ -15,7 +15,7 @@ CREATE TABLE IF NOT EXISTS public.users (
 );
 
 CREATE TABLE IF NOT EXISTS public.circles (
-  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   name TEXT NOT NULL,
   description TEXT,
   owner_id UUID NOT NULL REFERENCES public.users(id) ON DELETE CASCADE,
@@ -26,7 +26,7 @@ CREATE TABLE IF NOT EXISTS public.circles (
 );
 
 CREATE TABLE IF NOT EXISTS public.circle_members (
-  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   circle_id UUID NOT NULL REFERENCES public.circles(id) ON DELETE CASCADE,
   user_id UUID NOT NULL REFERENCES public.users(id) ON DELETE CASCADE,
   role TEXT NOT NULL CHECK (role IN ('owner', 'admin', 'member')),
@@ -35,7 +35,7 @@ CREATE TABLE IF NOT EXISTS public.circle_members (
 );
 
 CREATE TABLE IF NOT EXISTS public.goals (
-  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   title TEXT NOT NULL,
   description TEXT,
   deadline TIMESTAMP WITH TIME ZONE,
@@ -48,7 +48,7 @@ CREATE TABLE IF NOT EXISTS public.goals (
 );
 
 CREATE TABLE IF NOT EXISTS public.tasks (
-  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   title TEXT NOT NULL,
   description TEXT,
   status TEXT NOT NULL DEFAULT 'todo' CHECK (status IN ('todo', 'in_progress', 'completed')),
@@ -63,7 +63,7 @@ CREATE TABLE IF NOT EXISTS public.tasks (
 );
 
 CREATE TABLE IF NOT EXISTS public.comments (
-  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   body TEXT NOT NULL,
   target_type TEXT NOT NULL CHECK (target_type IN ('task', 'goal')),
   target_id UUID NOT NULL,
@@ -76,7 +76,7 @@ CREATE TABLE IF NOT EXISTS public.comments (
 );
 
 CREATE TABLE IF NOT EXISTS public.notifications (
-  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   type TEXT NOT NULL CHECK (type IN ('task_assigned', 'circle_invite', 'comment', 'deadline', 'goal_update')),
   title TEXT NOT NULL,
   message TEXT NOT NULL,
@@ -87,7 +87,7 @@ CREATE TABLE IF NOT EXISTS public.notifications (
 );
 
 CREATE TABLE IF NOT EXISTS public.activity_logs (
-  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   action_type TEXT NOT NULL,
   entity_type TEXT NOT NULL,
   entity_id UUID NOT NULL,
