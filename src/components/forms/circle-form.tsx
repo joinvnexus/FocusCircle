@@ -17,7 +17,7 @@ const joinSchema = z.object({
   inviteCode: z.string().min(6, "Invite code is required"),
 });
 
-export function CircleCreationCard() {
+export function CircleCreationCard({ onSuccess }: { onSuccess?: () => void }) {
   const [isPending, startTransition] = useTransition();
   const form = useForm<z.infer<typeof circleSchema>>({
     resolver: zodResolver(circleSchema),
@@ -41,6 +41,7 @@ export function CircleCreationCard() {
               }
               toast.success("Circle created");
               form.reset();
+              onSuccess?.();
             });
           })}
         >
@@ -59,7 +60,7 @@ export function CircleCreationCard() {
   );
 }
 
-export function CircleJoinCard() {
+export function CircleJoinCard({ onSuccess }: { onSuccess?: () => void }) {
   const [isPending, startTransition] = useTransition();
   const form = useForm<z.infer<typeof joinSchema>>({
     resolver: zodResolver(joinSchema),
@@ -83,6 +84,7 @@ export function CircleJoinCard() {
               }
               toast.success("Joined circle");
               form.reset();
+              onSuccess?.();
             });
           })}
         >

@@ -10,6 +10,9 @@ export interface EmptyStateProps {
   icon?: React.ReactNode;
   className?: string;
   illustration?: React.ReactNode;
+  secondaryActionLabel?: string;
+  onSecondaryAction?: () => void;
+  align?: "center" | "left";
 }
 
 export function EmptyState({
@@ -20,29 +23,63 @@ export function EmptyState({
   icon,
   illustration,
   className,
+  secondaryActionLabel,
+  onSecondaryAction,
+  align = "center",
 }: EmptyStateProps) {
   return (
-    <div className={cn("flex flex-col items-center justify-center text-center p-8", className)}>
+    <div
+      className={cn(
+        "flex flex-col justify-center gap-5 rounded-[var(--radius-xl)] border border-dashed border-[var(--color-border-primary)] bg-[var(--color-bg-secondary)] p-8",
+        align === "center" ? "items-center text-center" : "items-start text-left",
+        className,
+      )}
+    >
       {illustration ? (
-        <div className="mb-6">{illustration}</div>
+        <div>{illustration}</div>
       ) : icon ? (
-        <div className="mb-6 flex h-16 w-16 items-center justify-center rounded-2xl bg-[var(--color-bg-surface)] text-[var(--color-text-muted)]">
+        <div className="flex h-16 w-16 items-center justify-center rounded-[var(--radius-xl)] bg-[var(--color-bg-surface)] text-[var(--color-text-muted)]">
           {icon}
         </div>
       ) : (
-        <div className="mb-6 h-16 w-16 rounded-2xl bg-[var(--color-bg-surface)]" />
+        <EmptyStateIllustration />
       )}
-      <h3 className="mb-2 text-[var(--text-heading-md)] font-semibold text-[var(--color-text-primary)]">
-        {title}
-      </h3>
-      {description && (
-        <p className="mb-6 max-w-sm text-[var(--text-body-md)] text-[var(--color-text-muted)]">
-          {description}
-        </p>
+      <div className="space-y-2">
+        <h3 className="text-[var(--text-heading-md)] font-semibold text-[var(--color-text-primary)]">{title}</h3>
+        {description ? (
+          <p className="max-w-md text-[var(--text-body-md)] leading-[var(--leading-relaxed)] text-[var(--color-text-muted)]">
+            {description}
+          </p>
+        ) : null}
+      </div>
+      {(actionLabel && onAction) || (secondaryActionLabel && onSecondaryAction) ? (
+        <div className="flex flex-wrap items-center gap-3">
+          {actionLabel && onAction ? <Button onClick={onAction}>{actionLabel}</Button> : null}
+          {secondaryActionLabel && onSecondaryAction ? (
+            <Button variant="outline" onClick={onSecondaryAction}>
+              {secondaryActionLabel}
+            </Button>
+          ) : null}
+        </div>
+      ) : null}
+    </div>
+  );
+}
+
+export function EmptyStateIllustration({ className }: { className?: string }) {
+  return (
+    <div
+      className={cn(
+        "relative h-28 w-32 overflow-hidden rounded-[var(--radius-2xl)] border border-[var(--color-border-primary)] bg-[radial-gradient(circle_at_top,_rgba(59,130,246,0.16),_transparent_58%),linear-gradient(180deg,var(--color-bg-surface),transparent)]",
+        className,
       )}
-      {actionLabel && onAction && (
-        <Button onClick={onAction}>{actionLabel}</Button>
-      )}
+      aria-hidden="true"
+    >
+      <div className="absolute left-4 top-5 h-3 w-14 rounded-full bg-[var(--color-bg-surface-raised)]" />
+      <div className="absolute left-4 top-12 h-3 w-20 rounded-full bg-[var(--color-bg-surface-raised)]/80" />
+      <div className="absolute left-4 top-[4.75rem] h-3 w-12 rounded-full bg-[var(--color-bg-surface-raised)]/60" />
+      <div className="absolute right-4 top-8 h-14 w-14 rounded-[var(--radius-xl)] border border-[var(--color-border-primary)] bg-[var(--color-primary-500)]/12" />
+      <div className="absolute bottom-0 left-0 h-10 w-full bg-gradient-to-t from-[var(--color-bg-secondary)] to-transparent" />
     </div>
   );
 }

@@ -1,37 +1,40 @@
 import * as React from "react"
+import { cva, type VariantProps } from "class-variance-authority"
 
 import { cn } from "@/lib/utils"
 
+const cardVariants = cva(
+  "border text-[var(--color-text-primary)] transition-[border-color,box-shadow,background-color] duration-200",
+  {
+    variants: {
+      variant: {
+        default: "border-[var(--color-border-primary)] bg-[var(--color-bg-secondary)]",
+        elevated: "border-[var(--color-border-primary)] bg-[var(--color-bg-secondary)] shadow-[var(--shadow-md)] hover:shadow-[var(--shadow-lg)]",
+        outline: "border-[var(--color-border-primary)] bg-transparent",
+        ghost: "border-transparent bg-transparent shadow-none",
+      },
+      radius: {
+        sm: "rounded-[var(--radius-sm)]",
+        md: "rounded-[var(--radius-md)]",
+        lg: "rounded-[var(--radius-lg)]",
+        xl: "rounded-[var(--radius-xl)]",
+      },
+    },
+    defaultVariants: {
+      variant: "default",
+      radius: "lg",
+    },
+  },
+)
+
 const Card = React.forwardRef<
   HTMLDivElement,
-  React.HTMLAttributes<HTMLDivElement> & {
-    variant?: 'default' | 'elevated' | 'outline' | 'ghost';
-    radius?: 'sm' | 'md' | 'lg' | 'xl';
-  }
->(({ className, variant = 'default', radius = 'lg', ...props }, ref) => {
-  const variants = {
-    default: 'bg-[var(--color-bg-surface)] border-[var(--color-border-primary)]',
-    elevated: 'bg-[var(--color-bg-surface)] border-[var(--color-border-primary)] shadow-[var(--shadow-md)] hover:shadow-[var(--shadow-lg)] transition-shadow',
-    outline: 'bg-transparent border-[var(--color-border-primary)]',
-    ghost: 'bg-transparent border-none',
-  };
-  
-  const radii = {
-    sm: 'rounded-[var(--radius-sm)]',
-    md: 'rounded-[var(--radius-md)]',
-    lg: 'rounded-[var(--radius-lg)]',
-    xl: 'rounded-[var(--radius-xl)]',
-  };
-  
+  React.HTMLAttributes<HTMLDivElement> & VariantProps<typeof cardVariants>
+>(({ className, variant, radius, ...props }, ref) => {
   return (
     <div
       ref={ref}
-      className={cn(
-        'border',
-        variants[variant],
-        radii[radius],
-        className
-      )}
+      className={cn(cardVariants({ variant, radius }), className)}
       {...props}
     />
   );
@@ -57,7 +60,7 @@ const CardTitle = React.forwardRef<
   <h3
     ref={ref}
     className={cn(
-      "text-2xl font-semibold leading-none tracking-tight",
+      "text-[var(--text-heading-lg)] font-semibold leading-[var(--leading-tight)] tracking-tight text-[var(--color-text-primary)]",
       className
     )}
     {...props}
@@ -71,7 +74,7 @@ const CardDescription = React.forwardRef<
 >(({ className, ...props }, ref) => (
   <p
     ref={ref}
-    className={cn("text-sm text-muted-foreground", className)}
+    className={cn("text-sm text-[var(--color-text-muted)]", className)}
     {...props}
   />
 ))

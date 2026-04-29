@@ -1,19 +1,12 @@
 import { getGoalsPageData } from '@/lib/data';
 import { requireUser } from '@/lib/auth';
 import { GoalForm } from '@/components/forms/goal-form';
-import { Button } from '@/components/ui/button';
+import { EmptyState } from '@/components/shared/empty-state';
+import { QuickActionDialog } from '@/components/shared/quick-action-dialog';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from '@/components/ui/dialog';
-import { Plus } from 'lucide-react';
+import { Target } from 'lucide-react';
 import { RealtimeRefresh } from '@/components/shared/realtime-refresh';
 import Link from 'next/link';
 
@@ -33,21 +26,14 @@ export default async function GoalsPage() {
             <h1 className="text-3xl font-semibold">Goals</h1>
             <p className="text-muted-foreground">Shared circle goals with automatic progress from task completion.</p>
           </div>
-          <Dialog>
-            <DialogTrigger asChild>
-              <Button>
-                <Plus className="mr-2 h-4 w-4" />
-                New goal
-              </Button>
-            </DialogTrigger>
-            <DialogContent className="max-w-2xl p-0">
-              <DialogHeader className="sr-only">
-                <DialogTitle>Create Goal</DialogTitle>
-                <DialogDescription>Add a new goal and link it to a circle.</DialogDescription>
-              </DialogHeader>
-              <GoalForm circles={circles} />
-            </DialogContent>
-          </Dialog>
+          <QuickActionDialog
+            action="new-goal"
+            title="Create Goal"
+            description="Add a new goal and link it to a circle."
+            triggerLabel="New goal"
+          >
+            <GoalForm circles={circles} />
+          </QuickActionDialog>
         </div>
       </div>
 
@@ -90,27 +76,23 @@ export default async function GoalsPage() {
           </Card>
         )) : (
           <Card className="border-dashed border-2">
-            <CardContent className="text-center p-12">
-              <div className="w-16 h-16 mx-auto mb-4 bg-muted rounded-2xl flex items-center justify-center">
-                <Plus className="h-8 w-8 text-muted-foreground" />
+            <CardContent className="p-4">
+              <EmptyState
+                title="No goals yet"
+                description="Create a shared goal for a circle and roll task progress up into a single target."
+                icon={<Target className="h-7 w-7" />}
+                className="border-0 bg-transparent"
+              />
+              <div className="-mt-16 flex justify-center">
+                <QuickActionDialog
+                  action="new-goal"
+                  title="Create Goal"
+                  description="Add a new goal and link it to a circle."
+                  triggerLabel="Create goal"
+                >
+                  <GoalForm circles={circles} />
+                </QuickActionDialog>
               </div>
-              <h3 className="font-semibold">No goals yet</h3>
-              <p className="text-muted-foreground mb-4">Create shared goals in your circles to track progress.</p>
-              <Dialog>
-                <DialogTrigger asChild>
-                  <Button>
-                    <Plus className="mr-2 h-4 w-4" />
-                    Create goal
-                  </Button>
-                </DialogTrigger>
-                <DialogContent className="max-w-2xl p-0">
-                  <DialogHeader className="sr-only">
-                <DialogTitle>Create Goal</DialogTitle>
-                <DialogDescription>Add a new goal and link it to a circle.</DialogDescription>
-                  </DialogHeader>
-                  <GoalForm circles={[]} />
-                </DialogContent>
-              </Dialog>
             </CardContent>
           </Card>
         )}

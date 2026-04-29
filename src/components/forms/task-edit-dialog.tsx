@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import {
   Dialog,
   DialogContent,
@@ -26,8 +27,10 @@ export function TaskEditDialog({
   goalOptions = [],
   children,
 }: TaskEditDialogProps) {
+  const [open, setOpen] = useState(false);
+
   return (
-    <Dialog>
+    <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
 {children || (
           <Button variant="ghost" size="icon" className="h-8 w-8 p-0">
@@ -46,6 +49,7 @@ export function TaskEditDialog({
           initialTask={task}
           circles={circles}
           goalOptions={goalOptions}
+          onSuccess={() => setOpen(false)}
         />
       </DialogContent>
     </Dialog>

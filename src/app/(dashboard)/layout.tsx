@@ -1,31 +1,37 @@
 'use client'
 
-import { useEffect, useState } from 'react'
-import { useRouter, usePathname } from 'next/navigation'
+import { useEffect, useMemo, useState } from 'react'
 import Link from 'next/link'
-import { useAuth } from '@/contexts/AuthContext'
-import { cn, getInitials } from '@/lib/utils'
+import { usePathname, useRouter } from 'next/navigation'
 import {
   Activity,
   Bell,
   CheckSquare,
+  ChevronLeft,
+  ChevronRight,
   LayoutDashboard,
   LogOut,
   Menu,
+  PanelLeft,
+  Search,
   Settings,
   Shield,
   Target,
   Users,
   X,
-  Search,
 } from 'lucide-react'
+import { toast } from 'sonner'
+import { CommandPalette } from '@/components/shared/command-palette'
+import { ThemeToggle } from '@/components/shared/theme-toggle'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { Button } from '@/components/ui/button'
-import { ThemeToggle } from '@/components/shared/theme-toggle'
-import { CommandPalette } from '@/components/shared/command-palette'
-import { toast } from 'sonner'
+import { useAuth } from '@/contexts/AuthContext'
+import { dispatchQuickAction, openCommandPalette } from '@/lib/app-events'
+import { cn, getInitials } from '@/lib/utils'
 
 export const dynamic = 'force-dynamic'
+
+const SIDEBAR_STORAGE_KEY = 'focuscircle:sidebar-collapsed'
 
 export default function DashboardLayout({
   children,
@@ -36,16 +42,25 @@ export default function DashboardLayout({
   const router = useRouter()
   const pathname = usePathname()
   const [sidebarOpen, setSidebarOpen] = useState(false)
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(() => {
+    if (typeof window === 'undefined') {
+      return false
+    }
+    return window.localStorage.getItem(SIDEBAR_STORAGE_KEY) === 'true'
+  })
 
-  const navigation = [
-    { name: 'Dashboard', href: '/dashboard', icon: LayoutDashboard },
-    { name: 'My Tasks', href: '/tasks', icon: CheckSquare },
-    { name: 'Circles', href: '/circles', icon: Users },
-    { name: 'Goals', href: '/goals', icon: Target },
-    { name: 'Activity', href: '/activity', icon: Activity },
-    { name: 'Notifications', href: '/notifications', icon: Bell },
-    ...(appUser?.is_admin ? [{ name: 'Admin', href: '/admin', icon: Shield }] : []),
-  ]
+  const navigation = useMemo(
+    () => [
+      { name: 'Dashboard', href: '/dashboard', icon: LayoutDashboard, shortcut: ['g', 'd'] },
+      { name: 'My Tasks', href: '/tasks', icon: CheckSquare, shortcut: ['g', 't'] },
+      { name: 'Circles', href: '/circles', icon: Users, shortcut: ['g', 'c'] },
+      { name: 'Goals', href: '/goals', icon: Target, shortcut: ['g', 'o'] },
+      { name: 'Activity', href: '/activity', icon: Activity, shortcut: ['g', 'a'] },
+      { name: 'Notifications', href: '/notifications', icon: Bell, shortcut: ['g', 'n'] },
+      ...(appUser?.is_admin ? [{ name: 'Admin', href: '/admin', icon: Shield, shortcut: ['g', 'm'] as [string, string] }] : []),
+    ],
+    [appUser?.is_admin],
+  )
 
   useEffect(() => {
     if (!loading && !user) {
@@ -58,7 +73,7 @@ export default function DashboardLayout({
     if (!checkout) return
 
     if (checkout === 'success') {
-      toast.success('Checkout complete. Activating Pro…')
+      toast.success('Checkout complete. Activating Pro...')
     } else if (checkout === 'cancel') {
       toast.message('Checkout canceled.')
     }
@@ -70,10 +85,88 @@ export default function DashboardLayout({
     void refreshSession()
   }, [pathname, refreshSession])
 
+  useEffect(() => {
+    window.localStorage.setItem(SIDEBAR_STORAGE_KEY, String(sidebarCollapsed))
+  }, [sidebarCollapsed])
+
+  useEffect(() => {
+    let sequence = ''
+
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.metaKey || event.ctrlKey || event.altKey) {
+        return
+      }
+
+      const key = event.key.toLowerCase()
+      if (event.target instanceof HTMLElement) {
+        const tagName = event.target.tagName
+        const isTypingTarget =
+          event.target.isContentEditable ||
+          tagName === 'INPUT' ||
+          tagName === 'TEXTAREA' ||
+          tagName === 'SELECT'
+        if (isTypingTarget) {
+          return
+        }
+      }
+
+      if (key === 'n') {
+        sequence = 'n'
+        window.setTimeout(() => {
+          sequence = ''
+        }, 900)
+        return
+      }
+
+      if (sequence === 'n') {
+        if (key === 't') {
+          event.preventDefault()
+          setSidebarOpen(false)
+          router.push('/tasks')
+          dispatchQuickAction('new-task')
+        } else if (key === 'g') {
+          event.preventDefault()
+          setSidebarOpen(false)
+          router.push('/goals')
+          dispatchQuickAction('new-goal')
+        } else if (key === 'c') {
+          event.preventDefault()
+          setSidebarOpen(false)
+          router.push('/circles')
+          dispatchQuickAction('new-circle')
+        }
+        sequence = ''
+        return
+      }
+
+      if (key === 'g') {
+        sequence = 'g'
+        window.setTimeout(() => {
+          sequence = ''
+        }, 900)
+        return
+      }
+
+      const match = navigation.find((item) => sequence === item.shortcut[0] && key === item.shortcut[1])
+      if (match) {
+        event.preventDefault()
+        sequence = ''
+        setSidebarOpen(false)
+        router.push(match.href)
+      }
+    }
+
+    document.addEventListener('keydown', onKeyDown)
+    return () => document.removeEventListener('keydown', onKeyDown)
+  }, [navigation, router])
+
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center" style={{ backgroundColor: 'var(--color-bg-primary)' }}>
-        <div className="h-8 w-8 animate-spin rounded-full border-b-2" style={{ borderBottomColor: 'var(--color-brand-primary)' }} />
+      <div className="flex min-h-screen items-center justify-center bg-[var(--color-bg-primary)]">
+        <div className="space-y-3 text-center">
+          <div className="mx-auto h-10 w-10 animate-spin rounded-full border-2 border-[var(--color-border-primary)] border-t-[var(--color-brand-primary)]" />
+          <p className="text-sm text-[var(--color-text-muted)]">Loading workspace...</p>
+        </div>
       </div>
     )
   }
@@ -88,149 +181,195 @@ export default function DashboardLayout({
   }
 
   return (
-    <div className="min-h-screen" style={{ backgroundColor: 'var(--color-bg-primary)', color: 'var(--color-text-primary)' }}>
+    <div className="min-h-screen bg-[var(--color-bg-primary)] text-[var(--color-text-primary)]">
       <CommandPalette />
-      
-      {/* Sidebar backdrop for mobile */}
-      {sidebarOpen && (
-        <div
-          className="fixed inset-0 z-40 lg:hidden"
-          style={{ backgroundColor: 'rgba(0,0,0,0.5)' }}
-          onClick={() => setSidebarOpen(false)}
-        />
-      )}
 
-      {/* Sidebar */}
+      {sidebarOpen ? (
+        <button
+          type="button"
+          className="fixed inset-0 z-40 bg-[var(--color-overlay)] lg:hidden"
+          onClick={() => setSidebarOpen(false)}
+          aria-label="Close navigation"
+        />
+      ) : null}
+
       <aside
         className={cn(
-          'fixed inset-y-0 left-0 z-50 flex flex-col border-r transition-all duration-300',
-          'w-64',
-          'lg:translate-x-0',
-          sidebarOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'
+          'fixed inset-y-0 left-0 z-50 flex flex-col border-r border-[var(--color-border-primary)] bg-[var(--color-bg-secondary)] transition-[width,transform] duration-300',
+          sidebarCollapsed ? 'lg:w-[5.5rem]' : 'lg:w-72',
+          sidebarOpen ? 'translate-x-0 w-72' : '-translate-x-full w-72 lg:translate-x-0',
         )}
-        style={{ backgroundColor: 'var(--color-bg-secondary)', borderColor: 'var(--color-border-primary)' }}
       >
-        <div className="flex h-16 shrink-0 items-center justify-between border-b px-4" style={{ borderColor: 'var(--color-border-primary)' }}>
-          <Link href="/dashboard" className={cn('flex items-center space-x-2')}>
-            <div className="flex h-9 w-9 items-center justify-center rounded-xl" style={{ backgroundColor: 'var(--color-brand-primary)' }}>
-              <span className="text-white font-bold text-lg">FC</span>
+        <div className="flex h-16 items-center justify-between border-b border-[var(--color-border-primary)] px-4">
+          <Link href="/dashboard" className="flex min-w-0 items-center gap-3">
+            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-[var(--radius-xl)] bg-[var(--color-brand-primary)] text-sm font-bold text-white shadow-[var(--shadow-sm)]">
+              FC
             </div>
-            <div>
-              <div className="font-semibold" style={{ color: 'var(--color-text-primary)' }}>FocusCircle</div>
-              <div className="text-xs" style={{ color: 'var(--color-text-muted)' }}>Productivity workspace</div>
+            <div className={cn('min-w-0 transition-opacity', sidebarCollapsed ? 'hidden lg:hidden' : 'block')}>
+              <div className="truncate font-semibold">FocusCircle</div>
+              <div className="truncate text-xs text-[var(--color-text-muted)]">Productivity workspace</div>
             </div>
           </Link>
+          <div className="flex items-center gap-1">
+            <Button
+              variant="ghost"
+              size="icon"
+              className="hidden lg:inline-flex"
+              onClick={() => setSidebarCollapsed((current) => !current)}
+              aria-label={sidebarCollapsed ? 'Expand sidebar' : 'Collapse sidebar'}
+            >
+              {sidebarCollapsed ? <ChevronRight className="h-4 w-4" /> : <ChevronLeft className="h-4 w-4" />}
+            </Button>
+            <Button
+              variant="ghost"
+              size="icon"
+              className="lg:hidden"
+              onClick={() => setSidebarOpen(false)}
+              aria-label="Close sidebar"
+            >
+              <X className="h-4 w-4" />
+            </Button>
+          </div>
+        </div>
+
+        <div className="px-3 py-4">
           <Button
-            variant="ghost"
-            size="icon"
-            className="lg:hidden h-8 w-8"
-            onClick={() => setSidebarOpen(false)}
-            style={{ color: 'var(--color-text-muted)' }}
+            variant="subtle"
+            className={cn('h-11 w-full justify-start overflow-hidden', sidebarCollapsed ? 'lg:justify-center lg:px-0' : '')}
+            onClick={openCommandPalette}
           >
-            <X className="h-4 w-4" />
+            <Search className="h-4 w-4 shrink-0" />
+            <span className={cn(sidebarCollapsed ? 'lg:hidden' : 'inline')}>Search anything</span>
+            <span className="ml-auto hidden rounded-full border border-[var(--color-border-primary)] px-2 py-1 text-[11px] text-[var(--color-text-muted)] lg:inline-flex">
+              {sidebarCollapsed ? 'K' : 'Cmd K'}
+            </span>
           </Button>
         </div>
 
-        <nav className="flex-1 overflow-y-auto p-3 space-y-1">
+        <nav className="flex-1 space-y-1 overflow-y-auto px-3 pb-4">
           {navigation.map((item) => {
-            const isActive = pathname === item.href || pathname.startsWith(item.href + '/')
+            const isActive = pathname === item.href || pathname.startsWith(`${item.href}/`)
             return (
               <Link
                 key={item.name}
                 href={item.href}
                 className={cn(
-                  'flex items-center gap-2.5 rounded-lg px-2.5 py-2 text-sm font-medium transition-colors',
+                  'group flex items-center gap-3 rounded-[var(--radius-lg)] px-3 py-3 text-sm font-medium transition',
+                  sidebarCollapsed ? 'lg:justify-center lg:px-0' : '',
                   isActive
-                    ? 'text-white'
-                    : 'hover:text-[var(--color-text-primary)] text-[var(--color-text-muted)] hover:bg-[var(--color-bg-surface)]'
+                    ? 'bg-[var(--color-brand-primary)] text-white shadow-[var(--shadow-sm)]'
+                    : 'text-[var(--color-text-secondary)] hover:bg-[var(--color-bg-surface)] hover:text-[var(--color-text-primary)]',
                 )}
-                style={isActive ? { backgroundColor: 'var(--color-brand-primary)' } : {}}
-                onClick={() => setSidebarOpen(false)}
+                title={sidebarCollapsed ? item.name : undefined}
               >
-                <item.icon className="h-5 w-5 flex-shrink-0" />
-                <span>{item.name}</span>
+                <item.icon className="h-5 w-5 shrink-0" />
+                <span className={cn('truncate', sidebarCollapsed ? 'lg:hidden' : 'inline')}>{item.name}</span>
+                <span className={cn('ml-auto text-[11px] uppercase tracking-[0.18em] opacity-70', sidebarCollapsed ? 'hidden' : 'inline')}>
+                  {item.shortcut.join(' ')}
+                </span>
               </Link>
             )
           })}
         </nav>
 
-        <div className="border-t p-3 space-y-2" style={{ borderColor: 'var(--color-border-primary)' }}>
-          <div className="flex items-center gap-2 rounded-lg p-2" style={{ backgroundColor: 'var(--color-bg-surface)' }}>
-            <Avatar className="h-8 w-8">
-              {appUser?.avatar_url ? (
-                <AvatarImage src={appUser.avatar_url} alt={appUser.full_name || 'User avatar'} />
-              ) : null}
-              <AvatarFallback style={{ backgroundColor: 'var(--color-bg-surface-raised)', color: 'var(--color-text-primary)' }}>
+        <div className="border-t border-[var(--color-border-primary)] p-3">
+          <div
+            className={cn(
+              'flex items-center gap-3 rounded-[var(--radius-lg)] bg-[var(--color-bg-surface)] p-3',
+              sidebarCollapsed ? 'lg:justify-center' : '',
+            )}
+          >
+            <Avatar className="h-10 w-10 shrink-0">
+              {appUser?.avatar_url ? <AvatarImage src={appUser.avatar_url} alt={appUser.full_name || 'User avatar'} /> : null}
+              <AvatarFallback className="bg-[var(--color-bg-surface-raised)] text-[var(--color-text-primary)]">
                 {getInitials(appUser?.full_name || user.email || 'U')}
               </AvatarFallback>
             </Avatar>
-            <div className="flex-1 min-w-0">
-              <p className="text-sm font-medium truncate" style={{ color: 'var(--color-text-primary)' }}>
-                {appUser?.full_name || 'User'}
-              </p>
-              <p className="text-xs truncate" style={{ color: 'var(--color-text-muted)' }}>
-                {user.email}
-              </p>
+            <div className={cn('min-w-0 flex-1', sidebarCollapsed ? 'lg:hidden' : 'block')}>
+              <p className="truncate text-sm font-medium">{appUser?.full_name || 'User'}</p>
+              <p className="truncate text-xs text-[var(--color-text-muted)]">{user.email}</p>
             </div>
           </div>
-          <Button
-            variant="ghost"
-            className="w-full justify-start gap-2 text-[var(--color-text-muted)] hover:text-[var(--color-text-primary)] hover:bg-[var(--color-bg-surface)]"
-            asChild
-          >
-            <Link href="/profile">
-              <Settings className="h-4 w-4" />
-              Settings
-            </Link>
-          </Button>
-          <button
-            type="button"
-            onClick={handleSignOut}
-            className="flex w-full items-center gap-2 rounded-lg px-2.5 py-2 text-sm font-medium text-[var(--color-text-muted)] transition-colors hover:bg-[var(--color-bg-surface)] hover:text-[var(--color-error)]"
-          >
-            <LogOut className="h-4 w-4" />
-            Sign Out
-          </button>
+
+          <div className="mt-2 space-y-1">
+            <Button
+              variant="ghost"
+              className={cn('h-10 w-full justify-start', sidebarCollapsed ? 'lg:justify-center lg:px-0' : '')}
+              asChild
+            >
+              <Link href="/profile" title="Settings">
+                <Settings className="h-4 w-4 shrink-0" />
+                <span className={cn(sidebarCollapsed ? 'lg:hidden' : 'inline')}>Settings</span>
+              </Link>
+            </Button>
+            <Button
+              type="button"
+              variant="ghost"
+              className={cn(
+                'h-10 w-full justify-start text-[var(--color-text-secondary)] hover:text-[var(--color-error)]',
+                sidebarCollapsed ? 'lg:justify-center lg:px-0' : '',
+              )}
+              onClick={handleSignOut}
+            >
+              <LogOut className="h-4 w-4 shrink-0" />
+              <span className={cn(sidebarCollapsed ? 'lg:hidden' : 'inline')}>Sign Out</span>
+            </Button>
+          </div>
         </div>
       </aside>
 
-      {/* Main content */}
-      <div className="lg:pl-64 transition-[padding] duration-300">
-        <header className="sticky top-0 z-30 flex h-16 items-center gap-4 border-b px-4 lg:px-6" style={{ backgroundColor: 'var(--color-bg-primary)', borderColor: 'var(--color-border-primary)' }}>
-          <Button
-            variant="ghost"
-            size="icon"
-            className="lg:hidden"
-            onClick={() => setSidebarOpen(true)}
-            style={{ color: 'var(--color-text-muted)' }}
-          >
-            <Menu className="h-5 w-5" />
-          </Button>
+      <div className={cn('transition-[padding] duration-300', sidebarCollapsed ? 'lg:pl-[5.5rem]' : 'lg:pl-72')}>
+        <header
+          className="sticky top-0 z-30 border-b border-[var(--color-border-primary)] backdrop-blur"
+          style={{ backgroundColor: 'color-mix(in srgb, var(--color-bg-primary) 95%, transparent)' }}
+        >
+          <div className="flex h-16 items-center gap-3 px-4 sm:px-6 lg:px-8">
+            <Button
+              variant="ghost"
+              size="icon"
+              className="lg:hidden"
+              onClick={() => setSidebarOpen(true)}
+              aria-label="Open navigation"
+            >
+              <Menu className="h-5 w-5" />
+            </Button>
 
-          {/* Command palette trigger */}
-          <Button
-            variant="outline"
-            className="hidden w-full max-w-md justify-start gap-2 text-[var(--color-text-muted)] sm:flex"
-            onClick={() => {}}
-          >
-            <Search className="h-4 w-4" />
-            <span>Search tasks, circles, settings...</span>
-            <kbd className="ml-auto hidden rounded border bg-[var(--color-bg-surface)] px-2 py-1 text-xs lg:inline-flex">
-              ⌘K
-            </kbd>
-          </Button>
+            <Button
+              variant="outline"
+              className="hidden h-11 w-full max-w-xl justify-start text-[var(--color-text-muted)] sm:flex"
+              onClick={openCommandPalette}
+            >
+              <Search className="h-4 w-4" />
+              <span>Search tasks, circles, goals, settings...</span>
+              <kbd className="ml-auto hidden rounded-full border border-[var(--color-border-primary)] bg-[var(--color-bg-secondary)] px-2 py-1 text-[11px] lg:inline-flex">
+                Cmd K
+              </kbd>
+            </Button>
 
-          <div className="ml-auto flex items-center gap-2">
-            <Link href="/notifications">
-              <Button variant="ghost" size="icon" style={{ color: 'var(--color-text-muted)' }}>
-                <Bell className="h-5 w-5" />
+            <div className="ml-auto flex items-center gap-2">
+              <Button variant="ghost" size="icon" className="sm:hidden" onClick={openCommandPalette} aria-label="Search">
+                <Search className="h-5 w-5" />
               </Button>
-            </Link>
-            <ThemeToggle />
+              <Link href="/notifications">
+                <Button variant="ghost" size="icon" aria-label="Notifications">
+                  <Bell className="h-5 w-5" />
+                </Button>
+              </Link>
+              <ThemeToggle />
+              <Button
+                variant="ghost"
+                size="icon"
+                className="hidden lg:inline-flex"
+                onClick={() => setSidebarCollapsed((current) => !current)}
+                aria-label="Toggle sidebar"
+              >
+                <PanelLeft className="h-5 w-5" />
+              </Button>
+            </div>
           </div>
         </header>
 
-        <main className="p-4 md:p-6 lg:p-8">{children}</main>
+        <main className="p-4 sm:p-6 lg:p-8">{children}</main>
       </div>
     </div>
   )

@@ -3,6 +3,8 @@ import { Copy, Users } from "lucide-react";
 import { getCirclesForUser } from "@/lib/data";
 import { requireUser } from "@/lib/auth";
 import { CircleCreationCard, CircleJoinCard } from "@/components/forms/circle-form";
+import { EmptyState } from "@/components/shared/empty-state";
+import { QuickActionDialog } from "@/components/shared/quick-action-dialog";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { RealtimeRefresh } from "@/components/shared/realtime-refresh";
@@ -18,9 +20,19 @@ export default async function CirclesPage() {
           { channel: `circle-members-${user.id}`, table: "circle_members", filter: `user_id=eq.${user.id}` },
         ]}
       />
-      <div>
-        <h1 className="text-3xl font-semibold">Circles</h1>
-        <p className="text-muted-foreground">Create collaboration spaces, share invite codes, and jump into each workspace.</p>
+      <div className="flex items-center justify-between gap-4">
+        <div>
+          <h1 className="text-3xl font-semibold">Circles</h1>
+          <p className="text-muted-foreground">Create collaboration spaces, share invite codes, and jump into each workspace.</p>
+        </div>
+        <QuickActionDialog
+          action="new-circle"
+          title="Create Circle"
+          description="Create a new circle and invite your team."
+          triggerLabel="New circle"
+        >
+          <CircleCreationCard />
+        </QuickActionDialog>
       </div>
 
       <div className="grid gap-6 xl:grid-cols-2">
@@ -52,7 +64,15 @@ export default async function CirclesPage() {
               </CardContent>
             </Card>
           );
-        }) : <div className="rounded-2xl border border-dashed p-8 text-sm text-muted-foreground">You are not in any circles yet.</div>}
+        }) : (
+          <div className="md:col-span-2 xl:col-span-3">
+            <EmptyState
+              title="You are not in any circles yet"
+              description="Create a new workspace for your team or join one instantly with an invite code."
+              icon={<Users className="h-7 w-7" />}
+            />
+          </div>
+        )}
       </div>
     </div>
   );

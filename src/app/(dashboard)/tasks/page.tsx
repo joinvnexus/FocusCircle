@@ -2,18 +2,11 @@ import { getTaskBoardData } from '@/lib/data';
 import { requireUser } from '@/lib/auth';
 import { KanbanBoard } from '@/components/dashboard/kanban-board';
 import { TaskForm } from '@/components/forms/task-form';
-import { Button } from '@/components/ui/button';
+import { EmptyState } from '@/components/shared/empty-state';
+import { QuickActionDialog } from '@/components/shared/quick-action-dialog';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from '@/components/ui/dialog';
 import { RealtimeRefresh } from '@/components/shared/realtime-refresh';
-import { Plus } from 'lucide-react';
+import { CheckSquare2 } from 'lucide-react';
 
 export default async function TasksPage() {
   const user = await requireUser();
@@ -32,26 +25,19 @@ export default async function TasksPage() {
             <h1 className="text-3xl font-semibold">Tasks</h1>
             <p className="text-muted-foreground">Personal tasks and circle assignments across all boards.</p>  
           </div>
-          <Dialog>
-            <DialogTrigger asChild>
-              <Button>
-                <Plus className="mr-2 h-4 w-4" />
-                New task
-              </Button>
-            </DialogTrigger>
-            <DialogContent className="max-w-2xl p-0">
-              <DialogHeader className="sr-only">
-                <DialogTitle>Create Task</DialogTitle>
-                <DialogDescription>Add a new task and set its details.</DialogDescription>
-              </DialogHeader>
-              <TaskForm mode="create" circles={circles} />
-            </DialogContent>
-          </Dialog>
+          <QuickActionDialog
+            action="new-task"
+            title="Create Task"
+            description="Add a new task and set its details."
+            triggerLabel="New task"
+          >
+            <TaskForm mode="create" circles={circles} />
+          </QuickActionDialog>
         </div>
       </div>
 
       {tasks.length ? (
-        <Card className="border-0 shadow-sm">
+        <Card variant="elevated" className="border-0 shadow-sm">
           <CardHeader>
             <CardTitle className="flex items-center justify-between">
               Task board
@@ -65,28 +51,25 @@ export default async function TasksPage() {
           </CardContent>
         </Card>
       ) : (
-        <Card className="border-dashed border-2">
-          <CardContent className="text-center p-12">
-            <div className="w-16 h-16 mx-auto mb-4 bg-muted rounded-2xl flex items-center justify-center">
-              <Plus className="h-8 w-8 text-muted-foreground" />
-            </div>
-            <h3 className="font-semibold">No tasks yet</h3>
-            <p className="text-muted-foreground mb-4">Get started by creating your first task.</p>
-            <Dialog>
-              <DialogTrigger asChild>  
-                <Button>
-                  <Plus className="mr-2 h-4 w-4" />
-                  Create task
-                </Button>
-              </DialogTrigger>
-              <DialogContent className="max-w-2xl p-0">
-                <DialogHeader className="sr-only">
-                <DialogTitle>Create Task</DialogTitle>
-                <DialogDescription>Add a new task and set its details.</DialogDescription>
-                </DialogHeader>
+        <Card variant="outline" className="border-dashed">
+          <CardContent className="p-4">
+            <EmptyState
+              title="No tasks yet"
+              description="Start with a personal task or create one for a circle so the board can track momentum."
+              icon={<CheckSquare2 className="h-7 w-7" />}
+              illustration={<div className="flex h-28 w-32 items-center justify-center rounded-[var(--radius-2xl)] border border-[var(--color-border-primary)] bg-[var(--color-bg-surface)]"><CheckSquare2 className="h-10 w-10 text-[var(--color-brand-primary)]" /></div>}
+              className="border-0 bg-transparent"
+            />
+            <div className="-mt-16 flex justify-center">
+              <QuickActionDialog
+                action="new-task"
+                title="Create Task"
+                description="Add a new task and set its details."
+                triggerLabel="Create task"
+              >
                 <TaskForm mode="create" circles={circles} />
-              </DialogContent>
-            </Dialog>
+              </QuickActionDialog>
+            </div>
           </CardContent>
         </Card>
       )}

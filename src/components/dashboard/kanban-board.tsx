@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState, useTransition } from "react";
+import { useEffect, useMemo, useRef, useState, useTransition } from "react";
 import { DndContext, DragEndEvent, useDraggable, useDroppable } from "@dnd-kit/core";
 import { toast } from "sonner";
 import { Trash2, Edit3 } from "lucide-react";
@@ -23,6 +23,7 @@ interface KanbanBoardProps {
 export function KanbanBoard({ initialTasks, circles = [], goalOptions = [] }: KanbanBoardProps) {
   const [tasks, setTasks] = useState(initialTasks);
   const [isPending, startTransition] = useTransition();
+  const deleteTimeouts = useRef<Map<string, number>>(new Map());
   const grouped = useMemo(
     () => Object.fromEntries(columns.map((column) => [column, tasks.filter((task) => task.status === column)])),
     [tasks],
@@ -51,6 +52,14 @@ export function KanbanBoard({ initialTasks, circles = [], goalOptions = [] }: Ka
     });
   }
 
+  useEffect(() => {
+    const timeouts = deleteTimeouts.current;
+    return () => {
+      timeouts.forEach((timeout) => window.clearTimeout(timeout));
+      timeouts.clear();
+    };
+  }, []);
+
   return (
     <DndContext onDragEnd={handleDragEnd}>
       <div className="grid gap-4 lg:grid-cols-3">
@@ -63,14 +72,43 @@ export function KanbanBoard({ initialTasks, circles = [], goalOptions = [] }: Ka
             circles={circles}
             goalOptions={goalOptions}
             onDelete={(taskId) => {
-              const previous = tasks;
-              setTasks((prev) => prev.filter((task) => task.id !== taskId));
-              startTransition(async () => {
-                const result = await deleteTaskAction(taskId);
-                if (result.error) {
-                  toast.error(result.error);
-                  setTasks(previous);
-                }
+              const task = tasks.find((entry) => entry.id === taskId);
+              if (!task) {
+                return;
+              }
+
+              setTasks((prev) => prev.filter((entry) => entry.id !== taskId));
+
+              const timeout = window.setTimeout(() => {
+                deleteTimeouts.current.delete(taskId);
+                startTransition(async () => {
+                  const result = await deleteTaskAction(taskId);
+                  if (result.error) {
+                    toast.error(result.error);
+                    setTasks((prev) => [task, ...prev]);
+                  }
+                });
+              }, 4000);
+
+              deleteTimeouts.current.set(taskId, timeout);
+
+              toast.message(`Deleted "${task.title}"`, {
+                action: {
+                  label: "Undo",
+                  onClick: () => {
+                    const pendingTimeout = deleteTimeouts.current.get(taskId);
+                    if (pendingTimeout) {
+                      window.clearTimeout(pendingTimeout);
+                      deleteTimeouts.current.delete(taskId);
+                    }
+                    setTasks((prev) => {
+                      if (prev.some((entry) => entry.id === task.id)) {
+                        return prev;
+                      }
+                      return [...prev, task].sort((left, right) => columns.indexOf(left.status) - columns.indexOf(right.status));
+                    });
+                  },
+                },
               });
             }}
             isPending={isPending}

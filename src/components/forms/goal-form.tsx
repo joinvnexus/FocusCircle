@@ -16,7 +16,13 @@ import { goalSchema } from "@/lib/validators";
 
 type GoalFormValues = z.input<typeof goalSchema>;
 
-export function GoalForm({ circles }: { circles: Array<{ id: string; name: string }> }) {
+export function GoalForm({
+  circles,
+  onSuccess,
+}: {
+  circles: Array<{ id: string; name: string }>;
+  onSuccess?: () => void;
+}) {
   const [isPending, startTransition] = useTransition();
   const form = useForm<GoalFormValues>({
     resolver: zodResolver(goalSchema),
@@ -48,6 +54,7 @@ export function GoalForm({ circles }: { circles: Array<{ id: string; name: strin
               }
               toast.success("Goal created");
               form.reset({ title: "", description: "", circleId: circles[0]?.id ?? "", deadline: "", progress: 0, completionStatus: false });
+              onSuccess?.();
             });
           })}
         >
