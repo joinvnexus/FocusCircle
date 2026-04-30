@@ -38,3 +38,25 @@ export async function markAllNotificationsReadAction() {
   revalidatePath("/dashboard");
   return { error: null };
 }
+
+export async function markNotificationsReadAction(notificationIds: string[]) {
+  const supabase = await createClient();
+  const { error } = await supabase.from("notifications").update({ is_read: true }).in("id", notificationIds);
+  if (error) {
+    return { error: error.message };
+  }
+  revalidatePath("/notifications");
+  revalidatePath("/dashboard");
+  return { error: null };
+}
+
+export async function deleteNotificationsAction(notificationIds: string[]) {
+  const supabase = await createClient();
+  const { error } = await supabase.from("notifications").delete().in("id", notificationIds);
+  if (error) {
+    return { error: error.message };
+  }
+  revalidatePath("/notifications");
+  revalidatePath("/dashboard");
+  return { error: null };
+}
